@@ -221,6 +221,35 @@ describe("completeStoreOrderByToken", () => {
     expect(fresh.reserved).toBe(0)
   })
 
+  it("régression : une confirmation tardive ne peut pas décrémenter le stock d'une commande déjà annulée", async () => {
+    const product = await createTestProduct({ price: 1000, stock: 10, reserved: 0 })
+    await prisma.order.create({
+      data: {
+        orderNumber: rid("AK-TEST"),
+        customerName: "Cliente",
+        customerPhone: "+221771112233",
+        subtotal: 1000,
+        total: 1000,
+        status: "CANCELLED", // déjà annulée (admin ou libération automatique) — stock déjà relâché
+        paymentStatus: "UNPAID",
+        paymentToken: "tok-resurrection-test",
+        items: { create: [{ productId: product.id, productName: product.name, sku: product.sku, unitPrice: 1000, quantity: 1, subtotal: 1000 }] },
+      },
+    })
+    // PayDunya répond enfin "completed" bien après l'annulation (webhook en retard)
+    vi.mocked(confirmCheckoutInvoice).mockResolvedValue({ status: "completed", raw: {} })
+
+    const result = await completeStoreOrderByToken("tok-resurrection-test")
+
+    // PayDunya dit bien "completed" (result.ok reflète son statut externe),
+    // mais le CAS interne n'a pas pu s'appliquer : la commande reste annulée.
+    expect(result.order?.status).toBe("CANCELLED")
+    expect(result.order?.paymentStatus).toBe("UNPAID")
+    const fresh = await prisma.product.findUniqueOrThrow({ where: { id: product.id } })
+    expect(fresh.stock).toBe(10) // pas décrémenté une deuxième fois
+    expect(fresh.reserved).toBe(0)
+  })
+
   it("une commande annulée/refusée relâche la réservation sans jamais toucher au stock réel", async () => {
     const product = await createTestProduct({ price: 1000, stock: 10, reserved: 1 })
     await prisma.order.create({

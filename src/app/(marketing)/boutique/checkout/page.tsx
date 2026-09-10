@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { IdCard, Package } from "lucide-react"
@@ -22,6 +22,11 @@ export default function CheckoutPage() {
   const [addressLandmark, setAddressLandmark] = useState("")
   const [notes, setNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  // Verrou synchrone — setSubmitting(true) seul ne suffit pas : son effet sur
+  // le bouton n'est visible qu'au rendu suivant, laissant une fenêtre où un
+  // double-clic très rapide (ou Entrée + clic) peut déclencher deux
+  // créations de commande avant que le bouton ne se désactive réellement.
+  const submittingRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
   const [memberName, setMemberName] = useState<string | null>(null)
@@ -113,6 +118,8 @@ export default function CheckoutPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (items.length === 0) return
+    if (submittingRef.current) return
+    submittingRef.current = true
     setSubmitting(true)
     setError(null)
     try {
@@ -144,6 +151,7 @@ export default function CheckoutPage() {
       const data = await res.json()
       if (!res.ok || data.error) {
         setError(data.error || "Impossible de créer la commande")
+        submittingRef.current = false
         setSubmitting(false)
         return
       }
@@ -151,6 +159,7 @@ export default function CheckoutPage() {
       setOrderId(data.orderId)
     } catch {
       setError("Erreur réseau — réessayez")
+      submittingRef.current = false
       setSubmitting(false)
     }
   }

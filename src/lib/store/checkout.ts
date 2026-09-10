@@ -311,8 +311,13 @@ export async function completeStoreOrderByToken(token: string) {
   }
 
   // CAS : un seul appel (webhook ou poll, arrivés en double) gagne la course.
+  // status: "PENDING" en plus de paymentStatus: "UNPAID" — empêche une
+  // confirmation tardive de "ressusciter" une commande déjà annulée (par un
+  // admin ou par la libération automatique des réservations expirées, voir
+  // lib/store/reservation-cleanup.ts) et de décrémenter le stock une
+  // deuxième fois après qu'il a déjà été relâché.
   const claimed = await prisma.order.updateMany({
-    where: { id: order.id, paymentStatus: "UNPAID" },
+    where: { id: order.id, paymentStatus: "UNPAID", status: "PENDING" },
     data: { paymentStatus: "PAID", status: "PROCESSING" },
   })
 

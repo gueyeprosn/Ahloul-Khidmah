@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CanalIcon } from "@/components/adhesion/canal-icon"
@@ -100,6 +100,10 @@ export function SoftPayPanel({
   const [result, setResult] = useState<SoftpayResponse | null>(null)
   const [polling, setPolling] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  // Verrou synchrone — évite qu'un double-clic déclenche deux tentatives de
+  // paiement SoftPay concurrentes avant que le bouton ne se désactive
+  // réellement (même raisonnement que boutique/checkout/page.tsx).
+  const startingRef = useRef(false)
 
   // Resynchronise `phone` quand le parent change `defaultPhone`, sans passer
   // par un effet (évite le rendu en cascade — voir react-hooks/set-state-in-effect).
@@ -153,6 +157,8 @@ export function SoftPayPanel({
   }, [polling, paymentId, goRetour, statusEndpoint])
 
   async function startPay(selected: "wave" | "orange") {
+    if (startingRef.current) return
+    startingRef.current = true
     setMethod(selected)
     setLoading(true)
     setError(null)
@@ -189,6 +195,7 @@ export function SoftPayPanel({
       setMethod(null)
     } finally {
       setLoading(false)
+      startingRef.current = false
     }
   }
 
