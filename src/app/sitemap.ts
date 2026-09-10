@@ -16,6 +16,7 @@ const routes: {
   { path: "/mediatheque", changeFrequency: "weekly", priority: 0.7 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.8 },
   { path: "/boutique", changeFrequency: "daily", priority: 0.9 },
+  { path: "/boutique/collections", changeFrequency: "weekly", priority: 0.75 },
   { path: "/mentions-legales", changeFrequency: "yearly", priority: 0.3 },
   { path: "/confidentialite", changeFrequency: "yearly", priority: 0.3 },
 ]
@@ -30,9 +31,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
   }))
 
-  const [categories, products] = await Promise.all([
+  const [categories, products, collections] = await Promise.all([
     prisma.category.findMany({ where: { active: true }, select: { slug: true } }),
     prisma.product.findMany({
+      where: { active: true },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.collection.findMany({
       where: { active: true },
       select: { slug: true, updatedAt: true },
     }),
@@ -52,5 +57,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticEntries, ...categoryEntries, ...productEntries]
+  const collectionEntries = collections.map((c) => ({
+    url: `${SITE_URL}/boutique/collections/${c.slug}`,
+    lastModified: c.updatedAt,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }))
+
+  return [...staticEntries, ...categoryEntries, ...productEntries, ...collectionEntries]
 }
