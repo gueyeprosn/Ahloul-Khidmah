@@ -13,7 +13,7 @@ export function StoreTrustBar({ className }: { className?: string }) {
     <ul
       className={
         className ??
-        "mx-auto grid max-w-6xl gap-3 px-5 sm:grid-cols-2 md:grid-cols-4 md:px-8"
+        "mx-auto grid max-w-6xl grid-cols-2 gap-3 px-5 md:grid-cols-4 md:px-8"
       }
     >
       {storeTrustItems.map((item) => {
