@@ -44,6 +44,8 @@ next-env.d.ts
 /data
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 
 # fichiers uploadés à l'exécution (produits, badges, témoignages) — données,
 # pas du code ; grossissent avec le temps, pas destinés au dépôt
