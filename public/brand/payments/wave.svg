@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Wave">
+  <defs>
+    <linearGradient id="wbg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#47D6FF"/>
+      <stop offset="1" stop-color="#00C2FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#wbg)"/>
+  <!-- Wave Senegal mark: stacked waves -->
+  <path
+    d="M11 28c5.2-10.5 10.4-10.5 15.6 0s10.4 10.5 15.6 0 10.4-10.5 15.6 0"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="5.5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M11 41c5.2-10.5 10.4-10.5 15.6 0s10.4 10.5 15.6 0 10.4-10.5 15.6 0"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="5.5"
+    stroke-linecap="round"
+  />
+</svg>

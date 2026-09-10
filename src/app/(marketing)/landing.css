@@ -1,0 +1,648 @@
+/* Brand tokens — Ahloul Khidma */
+:root {
+  --ak-emerald-deep: #0b3a25;
+  --ak-emerald-mid: #12512f;
+  --ak-gold: #c9a24c;
+  --ak-gold-light: #e8ce83;
+  --ak-gold-dark: #9c7b2e;
+  --ak-ivory: #fbf6ea;
+  --ak-ink: #20241c;
+  --ak-ink-soft: #4b4a3e;
+}
+
+.ak-pattern {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(232, 206, 131, 0.06) 0,
+      rgba(232, 206, 131, 0.06) 1px,
+      transparent 1px,
+      transparent 26px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(232, 206, 131, 0.06) 0,
+      rgba(232, 206, 131, 0.06) 1px,
+      transparent 1px,
+      transparent 26px
+    );
+}
+
+@keyframes ak-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ak-logo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes ak-logo-spin-y {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes ak-logo-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes ak-flare-drift {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translate(-8%, -12%) rotate(0deg) scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: translate(6%, 4%) rotate(12deg) scale(1.12);
+  }
+}
+
+@keyframes ak-hero-flare-sweep {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes ak-cta-shine {
+  0% {
+    transform: translateX(-130%) skewX(-18deg);
+  }
+  55%,
+  100% {
+    transform: translateX(230%) skewX(-18deg);
+  }
+}
+
+@keyframes ak-cta-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 14px 36px rgba(0, 0, 0, 0.28),
+      0 0 0 0 rgba(201, 162, 76, 0.4);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow:
+      0 18px 42px rgba(0, 0, 0, 0.34),
+      0 0 0 12px rgba(201, 162, 76, 0);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes ak-cta-solid-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 28px rgba(11, 58, 37, 0.28),
+      0 0 0 0 rgba(18, 81, 47, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 16px 34px rgba(11, 58, 37, 0.38),
+      0 0 0 10px rgba(18, 81, 47, 0);
+  }
+}
+
+@keyframes ak-cta-outline-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(11, 58, 37, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(11, 58, 37, 0);
+  }
+}
+
+@keyframes ak-cta-ghost-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes ak-cta-arrow {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.ak-hero-flare {
+  background:
+    radial-gradient(
+      ellipse 55% 40% at 50% 18%,
+      rgba(232, 206, 131, 0.22),
+      transparent 70%
+    ),
+    radial-gradient(
+      circle at 72% 28%,
+      rgba(255, 255, 255, 0.12),
+      transparent 28%
+    );
+  animation: ak-hero-flare-sweep 7s ease-in-out infinite;
+}
+
+.ak-hero-logo-wrap {
+  perspective: 900px;
+  animation: ak-logo-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ak-logo-stage {
+  position: relative;
+  width: min(38vw, 180px);
+  height: min(38vw, 180px);
+  transform-style: preserve-3d;
+}
+
+@media (min-width: 768px) {
+  .ak-logo-stage {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+.ak-logo-spin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: ak-logo-spin-y 18s linear infinite;
+}
+
+.ak-logo-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 3px rgba(201, 162, 76, 0.75),
+    0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.ak-logo-face-front {
+  transform: translateZ(1px);
+}
+
+.ak-logo-face-back {
+  /* Face arrière pré-tournée : le logo reste lisible, sans miroir */
+  transform: rotateY(180deg) translateZ(1px);
+}
+
+.ak-logo-glow {
+  position: absolute;
+  inset: -18%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(232, 206, 131, 0.45) 0%,
+    rgba(201, 162, 76, 0.18) 42%,
+    transparent 70%
+  );
+  filter: blur(18px);
+  animation: ak-logo-glow-pulse 4.5s ease-in-out infinite;
+}
+
+.ak-logo-flare {
+  pointer-events: none;
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(232, 206, 131, 0.25) 12%,
+      transparent 32%
+    ),
+    conic-gradient(
+      from 210deg at 50% 50%,
+      transparent 0deg,
+      rgba(255, 255, 255, 0.18) 8deg,
+      transparent 18deg,
+      transparent 180deg,
+      rgba(232, 206, 131, 0.12) 188deg,
+      transparent 200deg
+    );
+  mix-blend-mode: screen;
+  animation: ak-flare-drift 6s ease-in-out infinite;
+}
+
+.ak-hero-copy {
+  animation: ak-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+.ak-cta-primary,
+.ak-cta-solid,
+.ak-cta-outline,
+.ak-cta-ghost {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  will-change: transform, box-shadow;
+}
+
+.ak-cta-primary {
+  background: linear-gradient(
+    135deg,
+    var(--ak-gold-light) 0%,
+    var(--ak-gold) 45%,
+    #a8842f 100%
+  );
+  color: var(--ak-emerald-deep) !important;
+  animation: ak-cta-pulse 2.8s ease-in-out infinite;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.ak-cta-primary::before,
+.ak-cta-solid::before,
+.ak-cta-outline::before,
+.ak-cta-ghost::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 65%
+  );
+  transform: translateX(-130%) skewX(-18deg);
+  animation: ak-cta-shine 3.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ak-cta-solid::before {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(232, 206, 131, 0.45) 50%,
+    transparent 65%
+  );
+  animation-duration: 3.8s;
+}
+
+.ak-cta-outline::before,
+.ak-cta-ghost::before {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  animation-duration: 4s;
+}
+
+.ak-cta-primary > *,
+.ak-cta-solid > *,
+.ak-cta-outline > *,
+.ak-cta-ghost > * {
+  position: relative;
+  z-index: 2;
+}
+
+.ak-cta-primary:hover {
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.08);
+}
+
+.ak-cta-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.ak-cta-primary svg,
+.ak-cta-solid svg,
+.ak-cta-outline svg {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ak-cta-primary:hover svg,
+.ak-cta-solid:hover svg,
+.ak-cta-outline:hover svg {
+  animation: ak-cta-arrow 0.7s ease-in-out infinite;
+}
+
+/* Bouton plein émeraude (formulaires, nav, chemins) */
+.ak-cta-solid {
+  background: linear-gradient(
+    135deg,
+    var(--ak-emerald-mid) 0%,
+    var(--ak-emerald-deep) 55%,
+    #082918 100%
+  );
+  color: #fff !important;
+  border-color: transparent !important;
+  animation: ak-cta-solid-pulse 3s ease-in-out infinite;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease,
+    background 0.28s ease;
+}
+
+.ak-cta-solid:hover {
+  transform: translateY(-3px) scale(1.02);
+  filter: brightness(1.08);
+}
+
+.ak-cta-solid:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.ak-cta-solid:disabled {
+  animation: none;
+  filter: none;
+  transform: none;
+  opacity: 0.7;
+}
+
+/* Bouton contour émeraude */
+.ak-cta-outline {
+  background: transparent;
+  color: var(--ak-emerald-deep) !important;
+  border: 2px solid var(--ak-emerald-deep);
+  animation: ak-cta-outline-breathe 3.2s ease-in-out infinite;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.28s ease,
+    color 0.28s ease,
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.ak-cta-outline:hover {
+  transform: translateY(-3px) scale(1.02);
+  background: var(--ak-emerald-deep);
+  color: #fff !important;
+  box-shadow: 0 14px 30px rgba(11, 58, 37, 0.22);
+}
+
+.ak-cta-outline:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Bouton fantôme clair (hero secondaire) */
+.ak-cta-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ak-ivory) !important;
+  backdrop-filter: blur(8px);
+  animation: ak-cta-ghost-breathe 3.4s ease-in-out infinite;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.28s ease,
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.ak-cta-ghost:hover {
+  transform: translateY(-3px) scale(1.02);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 28px rgba(11, 58, 37, 0.28);
+}
+
+.ak-cta-ghost:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.ak-reveal {
+  animation: ak-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Portraits — page Qui sommes-nous */
+.ak-portrait {
+  position: relative;
+  isolation: isolate;
+}
+
+.ak-portrait__glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -8% -12%;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 55% 50% at 50% 42%,
+    rgba(201, 162, 76, 0.22),
+    transparent 72%
+  );
+}
+
+.ak-portrait__frame {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  padding: 7px;
+  background:
+    linear-gradient(
+      145deg,
+      #e8ce83 0%,
+      #c9a24c 28%,
+      #9c7b2e 55%,
+      #e8ce83 100%
+    );
+  box-shadow:
+    0 18px 40px rgba(11, 58, 37, 0.14),
+    0 2px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.ak-portrait__mat {
+  padding: 6px;
+  background: #fbf6ea;
+  box-shadow: inset 0 0 0 1px rgba(11, 58, 37, 0.12);
+}
+
+.ak-portrait__media {
+  position: relative;
+  overflow: hidden;
+  background: #0b3a25;
+}
+
+.ak-portrait__vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(6, 31, 20, 0.35) 0%, transparent 38%),
+    linear-gradient(to bottom, rgba(6, 31, 20, 0.08) 0%, transparent 22%);
+}
+
+.ak-portrait__caption {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.ak-portrait__name {
+  font-family: var(--font-amiri), serif;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--ak-emerald-deep);
+}
+
+.ak-portrait__role {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--ak-ink-soft);
+}
+
+.ak-portrait__ornament {
+  font-size: 0.55rem;
+  color: var(--ak-gold);
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.ak-portrait--featured {
+  margin: 0.5rem auto 2rem;
+  max-width: 17.5rem;
+}
+
+.ak-portrait--featured .ak-portrait__media {
+  aspect-ratio: 3 / 4;
+}
+
+.ak-portrait--featured .ak-portrait__name {
+  font-size: 1.35rem;
+}
+
+@media (min-width: 640px) {
+  .ak-portrait--featured {
+    max-width: 19rem;
+  }
+}
+
+.ak-portrait--inline {
+  margin: 0 0 1.25rem;
+  max-width: 12.5rem;
+}
+
+.ak-portrait--inline .ak-portrait__media {
+  aspect-ratio: 3 / 4;
+}
+
+.ak-portrait--inline .ak-portrait__name {
+  font-size: 1rem;
+}
+
+.ak-portrait--inline .ak-portrait__role {
+  font-size: 0.72rem;
+}
+
+@media (min-width: 768px) {
+  .ak-portrait--inline {
+    float: left;
+    margin: 0.35rem 1.75rem 1rem 0;
+    max-width: 13.5rem;
+  }
+
+  [dir="rtl"] .ak-portrait--inline {
+    float: right;
+    margin: 0.35rem 0 1rem 1.75rem;
+  }
+}
+
+.ak-khalife-block::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+@media (max-width: 767px) {
+  .ak-portrait__glow,
+  .ak-logo-glow,
+  .ak-logo-flare {
+    opacity: 0.35;
+  }
+
+  .ak-logo-spin {
+    animation-duration: 28s;
+  }
+
+  .ak-portrait--inline {
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ak-hero-logo-wrap,
+  .ak-hero-copy,
+  .ak-reveal,
+  .ak-portrait,
+  .ak-logo-spin,
+  .ak-logo-glow,
+  .ak-logo-flare,
+  .ak-hero-flare,
+  .ak-cta-primary,
+  .ak-cta-primary::before,
+  .ak-cta-solid,
+  .ak-cta-solid::before,
+  .ak-cta-outline,
+  .ak-cta-outline::before,
+  .ak-cta-ghost,
+  .ak-cta-ghost::before {
+    animation: none !important;
+  }
+
+  .ak-cta-primary:hover,
+  .ak-cta-solid:hover,
+  .ak-cta-outline:hover,
+  .ak-cta-ghost:hover,
+  .ak-cta-primary:hover svg,
+  .ak-cta-solid:hover svg,
+  .ak-cta-outline:hover svg {
+    transform: none;
+    animation: none;
+  }
+
+  .ak-logo-spin {
+    transform: none;
+  }
+}

@@ -1,0 +1,483 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  passwordHash   String
+  role           String   @default("admin")
+  active         Boolean  @default(true)
+  /// Incrémenté au changement de mot de passe : invalide tous les jetons de
+  /// session émis avant ce changement (révocation, cf. lib/auth.ts).
+  sessionVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// Journal d'activité admin — "qui a fait quoi" sur les actions sensibles
+/// (gestion des comptes admin, cotisations, contributions). adminName est
+/// dupliqué (pas de relation vers User) pour que l'historique reste lisible
+/// même si le compte admin est ensuite désactivé ou renommé.
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  adminName  String
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model Cellule {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  zone      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  adherents Adherent[]
+}
+
+model Adherent {
+  id                 String              @id // AK-YYYYMMDD-XXXXXX
+  numAdhesion        String?
+  dateEntree         String?
+  celluleLocale      String
+  zoneRegion         String
+  nom                String
+  prenoms            String
+  dateNaissance      String
+  lieuNaissance      String?
+  cni                String
+  nationalite        String
+  adresse            String
+  tel                String
+  whatsapp           String?
+  email              String?
+  profession         String
+  domaines           String              @default("[]") // JSON array
+  autreProfession    String?
+  montant            String
+  montantAutre       String?
+  canal              String
+  status             String              @default("actif") // actif | en_attente | archive
+  ficheComplete      Boolean             @default(false) // false = fiche membre incomplète
+  badgeSentAt        DateTime? // badge WhatsApp envoyé automatiquement
+  badgeEmailSentAt   DateTime? // badge + accès envoyés par email
+  /// Code PIN à 4 chiffres choisi par le membre pour /mon-espace (haché,
+  /// jamais stocké en clair). Tant qu'il n'est pas défini, la connexion se
+  /// fait avec les 4 derniers caractères du N° membre (cf. member-portal.ts).
+  pinHash            String?
+  /// Numéro d'ordre séquentiel selon la date d'adhésion (1 = premier membre
+  /// inscrit). Distinct de numAdhesion (texte libre saisi par la cellule).
+  /// Affiché sur le badge — voir lib/adherents.ts nextMemberNumber().
+  memberNumber       Int?                @unique
+  /// Photo du membre affichée sur le badge (chemin sous /uploads, comme les
+  /// photos CMS) — ajoutée par le membre lui-même depuis /mon-espace.
+  photoUrl           String?
+  celluleId          String?
+  cellule            Cellule?            @relation(fields: [celluleId], references: [id])
+  cotisations        Cotisation[]
+  payments           Payment[]
+  walletTransactions WalletTransaction[]
+  orders             Order[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([nom])
+  @@index([celluleLocale])
+  @@index([zoneRegion])
+  @@index([createdAt])
+  @@index([status])
+  @@index([memberNumber])
+}
+
+model Cotisation {
+  id         String    @id @default(cuid())
+  adherentId String
+  adherent   Adherent  @relation(fields: [adherentId], references: [id], onDelete: Cascade)
+  periode    String // YYYY-MM
+  montant    Int
+  canal      String
+  statut     String    @default("paye") // paye | en_attente
+  note       String?
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([adherentId, periode])
+  @@index([periode])
+  @@index([statut])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  token          String?       @unique // PayDunya invoice token
+  adherentId     String?
+  adherent       Adherent?     @relation(fields: [adherentId], references: [id], onDelete: SetNull)
+  contributionId String?       @unique
+  contribution   Contribution? @relation(fields: [contributionId], references: [id], onDelete: SetNull)
+  type           String // adhesion | cotisation | don
+  periode        String? // YYYY-MM — période principale (affichage/filtre)
+  periodes       String? // JSON string[] — toutes les périodes couvertes (cotisation multi-mois)
+  amount         Int
+  status         String        @default("pending") // pending | completed | canceled | failed
+  checkoutUrl    String?
+  receiptUrl     String?
+  customerName   String?
+  customerPhone  String?
+  // JSON formulaire adhésion light — création adhérent après paiement
+  adhesionDraft  String?
+  rawPayload     String? // JSON
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([adherentId])
+  @@index([status])
+  @@index([periode])
+}
+
+// Contributeur ponctuel — soutient sans devenir membre adhérent
+model Contribution {
+  id        String   @id @default(cuid())
+  nom       String?
+  prenoms   String?
+  tel       String?
+  email     String?
+  amount    Int
+  message   String?
+  campagne  String   @default("general") // general | magal | touba | education | autre
+  status    String   @default("pending") // pending | completed | canceled
+  canal     String   @default("paydunya")
+  payment   Payment?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([campagne])
+  @@index([createdAt])
+}
+
+// Wallet — journal de compte membre (crédit / débit)
+model WalletTransaction {
+  id         String   @id @default(cuid())
+  adherentId String
+  adherent   Adherent @relation(fields: [adherentId], references: [id], onDelete: Cascade)
+  type       String // credit | debit
+  amount     Int // FCFA, toujours positif
+  label      String // ex: "Cotisation sept. 2026", "Adhésion PayDunya"
+  reference  String? // ID paiement ou cotisation lié (optionnel)
+  createdAt  DateTime @default(now())
+
+  @@index([adherentId])
+  @@index([createdAt])
+}
+
+// CMS — albums photo (vision, galerie, …)
+model Album {
+  id          String   @id @default(cuid())
+  key         String   @unique // vision | galerie | custom
+  title       String
+  description String?
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  photos      Photo[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  albumId   String
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  src       String
+  alt       String
+  caption   String?
+  published Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([albumId])
+  @@index([published])
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  quoteFr   String
+  quoteAr   String
+  name      String
+  roleFr    String
+  roleAr    String
+  published Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+  @@index([sortOrder])
+}
+
+// ==================== BOUTIQUE ====================
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  active      Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active])
+}
+
+model Product {
+  id                String                 @id @default(cuid())
+  slug              String                 @unique
+  sku               String                 @unique
+  name              String
+  description       String
+  price             Int // FCFA
+  compareAtPrice    Int?
+  categoryId        String?
+  category          Category?              @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  /// Stock du produit lui-même quand il n'a pas de variantes. Si des
+  /// ProductVariant existent, le stock réel est porté par chaque variante
+  /// (voir lib/store/inventory.ts) et ces champs restent à 0 / non utilisés.
+  stock             Int                    @default(0)
+  reserved          Int                    @default(0)
+  lowStockThreshold Int                    @default(5)
+  limitedEdition    Boolean                @default(false)
+  limitedTotal      Int?
+  active            Boolean                @default(true)
+  featured          Boolean                @default(false)
+  isNew             Boolean                @default(false)
+  images            ProductImage[]
+  variants          ProductVariant[]
+  orderItems        OrderItem[]
+  inventoryTx       InventoryTransaction[]
+  reviews           Review[]
+  collections       ProductCollection[]
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@index([categoryId])
+  @@index([active])
+  @@index([slug])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+/// Variante = une combinaison d'attributs achetable (ex. "Taille: M / Couleur:
+/// Noir"), avec son propre stock et SKU. `attributes` est un JSON libre
+/// ({"taille":"M","couleur":"Noir"}) pour rester générique à tout produit.
+model ProductVariant {
+  id            String                 @id @default(cuid())
+  productId     String
+  product       Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label         String // ex. "M / Noir"
+  attributes    String // JSON
+  sku           String                 @unique
+  priceOverride Int?
+  stock         Int                    @default(0)
+  reserved      Int                    @default(0)
+  active        Boolean                @default(true)
+  orderItems    OrderItem[]
+  inventoryTx   InventoryTransaction[]
+
+  @@index([productId])
+}
+
+model Order {
+  id              String                 @id @default(cuid())
+  /// Numéro lisible public — jamais l'id interne (ex. AK-2026-000123). Voir
+  /// lib/store/order-number.ts, même esprit que lib/adhesion-id.ts.
+  orderNumber     String                 @unique
+  adherentId      String?
+  adherent        Adherent?              @relation(fields: [adherentId], references: [id], onDelete: SetNull)
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  status          String                 @default("PENDING")
+  paymentStatus   String                 @default("UNPAID")
+  subtotal        Int
+  shippingCost    Int                    @default(0)
+  discount        Int                    @default(0)
+  couponCode      String? // code réellement appliqué (traçabilité, affichage)
+  total           Int
+  shippingZone    String?
+  shippingAddress String? // JSON
+  notes           String?
+  paymentToken    String?                @unique // token PayDunya, même motif que Payment.token
+  checkoutUrl     String? // URL facture PayDunya — repli si SoftPay échoue
+  items           OrderItem[]
+  inventoryTx     InventoryTransaction[]
+  couponUsage     CouponUsage?
+  reviews         Review[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@index([adherentId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+/// Instantané des infos produit au moment de l'achat — si le produit change
+/// ou est archivé ensuite, la commande passée reste historiquement correcte.
+model OrderItem {
+  id            String          @id @default(cuid())
+  orderId       String
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String?
+  product       Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId     String?
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  productName   String
+  sku           String
+  unitPrice     Int
+  quantity      Int
+  customization String? // JSON, validé et nettoyé avant écriture
+  subtotal      Int
+
+  @@index([orderId])
+}
+
+/// Journal de mouvement de stock — chaque évolution est tracée (même esprit
+/// que WalletTransaction pour les cotisations/dons).
+model InventoryTransaction {
+  id        String          @id @default(cuid())
+  productId String
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  type      String // PURCHASE | RESTOCK | RESERVATION | RELEASE | ADJUSTMENT | RETURN | DAMAGE
+  quantity  Int // signé : +50 réappro, -2 vente
+  reason    String?
+  orderId   String?
+  order     Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  adminId   String?
+  createdAt DateTime        @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model Coupon {
+  id              String        @id @default(cuid())
+  code            String        @unique // toujours normalisé en majuscules
+  type            String // PERCENTAGE | FIXED_AMOUNT | FREE_SHIPPING
+  value           Int           @default(0) // % (1-100) ou FCFA — ignoré pour FREE_SHIPPING
+  startsAt        DateTime?
+  endsAt          DateTime?
+  minOrderAmount  Int           @default(0)
+  maxUses         Int? // null = illimité
+  usesPerCustomer Int? // null = illimité
+  active          Boolean       @default(true)
+  membersOnly     Boolean       @default(false)
+  usages          CouponUsage[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([active])
+}
+
+/// Une ligne par commande ayant réellement utilisé un coupon — sert à
+/// vérifier maxUses/usesPerCustomer et à tracer l'historique.
+model CouponUsage {
+  id             String   @id @default(cuid())
+  couponId       String
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerPhone  String
+  discountAmount Int
+  createdAt      DateTime @default(now())
+
+  @@index([couponId])
+  @@index([customerPhone])
+}
+
+/// Avis client — toujours lié à une commande réellement payée contenant ce
+/// produit (pas d'avis anonyme non vérifié). Un avis n'est public qu'une
+/// fois approuvé par un admin.
+model Review {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerName  String
+  customerPhone String
+  rating        Int // 1-5
+  comment       String
+  status        String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([orderId, productId])
+  @@index([productId, status])
+  @@index([status])
+}
+
+/// Collection éditoriale (permanente, saisonnière, événementielle, limitée,
+/// membre, solidaire) — une mise en avant thématique de produits existants,
+/// pas un nouveau catalogue.
+model Collection {
+  id          String              @id @default(cuid())
+  slug        String              @unique
+  name        String
+  tagline     String?
+  description String
+  type        String              @default("PERMANENTE") // PERMANENTE | SAISONNIERE | EVENEMENTIELLE | LIMITEE | MEMBRE | SOLIDAIRE
+  coverImage  String?
+  bannerImage String?
+  accentColor String? // hex optionnel — sinon palette Ahloul Khidmah par défaut
+  active      Boolean             @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  sortOrder   Int                 @default(0)
+  products    ProductCollection[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([active])
+}
+
+/// Table de jointure produit ↔ collection (plusieurs collections par
+/// produit possibles), avec un ordre d'affichage propre à chaque collection.
+model ProductCollection {
+  id           String     @id @default(cuid())
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  sortOrder    Int        @default(0)
+
+  @@unique([productId, collectionId])
+  @@index([collectionId])
+  @@index([productId])
+}
