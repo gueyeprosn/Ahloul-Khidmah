@@ -1,5 +1,6 @@
 import { HandHeart, MapPin, ShieldCheck, Truck } from "lucide-react"
 import { storeTrustItems } from "@/content/store"
+import { cn } from "@/lib/utils"
 
 const ICONS = {
   pay: ShieldCheck,
@@ -8,7 +9,35 @@ const ICONS = {
   impact: HandHeart,
 } as const
 
-export function StoreTrustBar({ className }: { className?: string }) {
+export function StoreTrustBar({
+  className,
+  compact = false,
+}: {
+  className?: string
+  /** Ligne fine sous le catalogue — ne vole pas la place aux produits. */
+  compact?: boolean
+}) {
+  if (compact) {
+    return (
+      <ul
+        className={cn(
+          "flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--ak-ink-soft)]",
+          className
+        )}
+      >
+        {storeTrustItems.map((item) => {
+          const Icon = ICONS[item.key]
+          return (
+            <li key={item.key} className="inline-flex items-center gap-1.5">
+              <Icon className="size-3.5 text-[var(--ak-emerald-deep)]" aria-hidden />
+              <span className="font-medium text-[var(--ak-ink)]">{item.title}</span>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
+
   return (
     <ul
       className={

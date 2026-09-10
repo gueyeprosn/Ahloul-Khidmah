@@ -80,49 +80,38 @@ export default async function BoutiquePage({
         ]}
       />
 
-      <section className="relative overflow-hidden bg-[var(--ak-emerald-deep)] px-5 pt-28 pb-16 md:px-8 md:pt-36 md:pb-20">
-        <div className="relative mx-auto max-w-6xl">
-          <nav aria-label="Fil d'Ariane" className="mb-8 text-sm text-[var(--ak-ivory)]/55">
-            <ol className="flex flex-wrap items-center gap-2">
-              <li>
-                <Link href="/" className="hover:text-[var(--ak-gold-light)]">
-                  Accueil
-                </Link>
-              </li>
-              <li aria-hidden className="text-[var(--ak-gold)]/60">/</li>
-              <li className="text-[var(--ak-ivory)]/80">Boutique</li>
-            </ol>
-          </nav>
-
-          <p className="text-xs font-semibold tracking-[0.25em] text-[var(--ak-gold)] uppercase">
-            Ahloul Khidmah Store
-          </p>
-          <h1 className="mt-4 font-[family-name:var(--font-amiri)] text-4xl leading-tight text-[var(--ak-ivory)] md:text-5xl">
-            Porter nos valeurs. Soutenir nos actions.
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--ak-ivory)]/75 md:text-lg">
-            Pins, porte-clés, papeterie et textile Ahloul Khidmah — des objets qui
-            portent l&apos;identité de la communauté, avec un impact réel sur nos
-            actions.
-          </p>
-          <StoreSearch className="mt-6 max-w-sm" />
+      {/* En-tête compact — les produits doivent apparaître tout de suite */}
+      <section className="border-b border-[var(--ak-gold)]/20 bg-[var(--ak-emerald-deep)] px-5 pt-24 pb-5 md:px-8 md:pt-28 md:pb-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0">
+            <nav aria-label="Fil d'Ariane" className="mb-2 text-xs text-[var(--ak-ivory)]/50">
+              <ol className="flex flex-wrap items-center gap-1.5">
+                <li>
+                  <Link href="/" className="hover:text-[var(--ak-gold-light)]">
+                    Accueil
+                  </Link>
+                </li>
+                <li aria-hidden>/</li>
+                <li className="text-[var(--ak-ivory)]/75">Boutique</li>
+              </ol>
+            </nav>
+            <h1 className="font-[family-name:var(--font-amiri)] text-2xl leading-tight text-[var(--ak-ivory)] md:text-3xl">
+              Boutique
+            </h1>
+            <p className="mt-1 text-sm text-[var(--ak-ivory)]/65">
+              Pins, textile & papeterie — au service de la khidma
+            </p>
+          </div>
+          <StoreSearch className="w-full md:max-w-xs" />
         </div>
       </section>
 
-      <div className="relative z-10 -mt-6">
-        <StoreTrustBar />
-      </div>
-
-      <div className="mt-8">
-        <StoreCampaignBanner />
-      </div>
-
-      <section className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-        <div className="flex flex-wrap gap-2">
+      <section className="mx-auto max-w-6xl px-5 pt-5 pb-10 md:px-8 md:pt-6">
+        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             href="/boutique"
             className={cn(
-              "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
               !categorie
                 ? "border-[var(--ak-emerald-deep)] bg-[var(--ak-emerald-deep)] text-[var(--ak-ivory)]"
                 : "border-[var(--ak-ink)]/15 text-[var(--ak-ink)] hover:border-[var(--ak-emerald-deep)]/40"
@@ -135,25 +124,25 @@ export default async function BoutiquePage({
               key={c.slug}
               href={`/boutique?categorie=${c.slug}`}
               className={cn(
-                "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
                 categorie === c.slug
                   ? "border-[var(--ak-emerald-deep)] bg-[var(--ak-emerald-deep)] text-[var(--ak-ivory)]"
                   : "border-[var(--ak-ink)]/15 text-[var(--ak-ink)] hover:border-[var(--ak-emerald-deep)]/40"
               )}
             >
-              {c.name} ({c._count.products})
+              {c.name}
             </Link>
           ))}
           <Link
             href="/boutique/collections"
-            className="flex items-center gap-1.5 rounded-full border border-[var(--ak-gold)]/50 px-4 py-2 text-sm font-medium text-[var(--ak-gold-dark)] transition-colors hover:border-[var(--ak-gold)] hover:bg-[var(--ak-ivory)]"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--ak-gold)]/50 px-3.5 py-1.5 text-sm font-medium text-[var(--ak-gold-dark)] transition-colors hover:border-[var(--ak-gold)] hover:bg-white"
           >
             <Layers className="size-3.5" aria-hidden />
             Collections
           </Link>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-[var(--ak-ink-soft)]">
             {total} produit{total > 1 ? "s" : ""}
           </p>
@@ -174,7 +163,7 @@ export default async function BoutiquePage({
         </div>
 
         {total === 0 ? (
-          <div className="mt-16 flex flex-col items-center gap-3 py-16 text-center">
+          <div className="mt-12 flex flex-col items-center gap-3 py-12 text-center">
             <ShoppingBag className="size-10 text-[var(--ak-ink-soft)]/40" aria-hidden />
             <p className="text-[var(--ak-ink-soft)]">
               {categorie || hasActiveFilters
@@ -183,7 +172,7 @@ export default async function BoutiquePage({
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {products.map((p) => {
               const summary = summarizeProduct(p)
               return (
@@ -208,10 +197,12 @@ export default async function BoutiquePage({
             })}
           </div>
         )}
-      </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-16 md:px-8">
-        <StoreImpactCard />
+        <div className="mt-10 space-y-8">
+          <StoreTrustBar compact />
+          <StoreCampaignBanner />
+          <StoreImpactCard />
+        </div>
       </section>
     </>
   )

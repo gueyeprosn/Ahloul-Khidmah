@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { SlidersHorizontal, X } from "lucide-react"
 import {
   Sheet,
@@ -25,28 +26,23 @@ export type StoreFilterValues = {
 const SORT_OPTIONS = [
   { value: "pertinence", label: "Pertinence" },
   { value: "nouveautes", label: "Nouveautés" },
-  { value: "prix_asc", label: "Prix croissant" },
-  { value: "prix_desc", label: "Prix décroissant" },
+  { value: "prix_asc", label: "Prix ↑" },
+  { value: "prix_desc", label: "Prix ↓" },
 ]
 
 function FilterFields({
   values,
   idPrefix,
-  layout,
 }: {
   values: StoreFilterValues
   idPrefix: string
-  layout: "row" | "column"
 }) {
-  const wrap = layout === "row" ? "flex flex-wrap items-end gap-4" : "space-y-5"
-  const fieldWidth = layout === "row" ? "w-40" : "w-full"
-
   return (
-    <div className={wrap}>
+    <div className="space-y-5">
       {values.categorie && <input type="hidden" name="categorie" value={values.categorie} />}
       {values.q && <input type="hidden" name="q" value={values.q} />}
 
-      <div className={`${fieldWidth} space-y-1.5`}>
+      <div className="space-y-1.5">
         <label htmlFor={`${idPrefix}-tri`} className="text-sm font-medium text-[var(--ak-ink)]">
           Trier par
         </label>
@@ -57,12 +53,14 @@ function FilterFields({
           className="h-9 w-full rounded-lg border border-[var(--ak-ink)]/15 bg-white px-3 text-sm"
         >
           {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </div>
 
-      <div className={`${layout === "row" ? "w-56" : "w-full"} space-y-1.5`}>
+      <div className="space-y-1.5">
         <p className="text-sm font-medium text-[var(--ak-ink)]">Prix (FCFA)</p>
         <div className="flex items-center gap-2">
           <input
@@ -87,7 +85,7 @@ function FilterFields({
         </div>
       </div>
 
-      <div className={`${fieldWidth} space-y-1.5`}>
+      <div className="space-y-1.5">
         <label htmlFor={`${idPrefix}-dispo`} className="text-sm font-medium text-[var(--ak-ink)]">
           Disponibilité
         </label>
@@ -103,7 +101,7 @@ function FilterFields({
         </select>
       </div>
 
-      <div className={`${layout === "row" ? "" : "w-full"} flex flex-wrap gap-3`}>
+      <div className="flex flex-wrap gap-3">
         <label className="flex items-center gap-1.5 text-sm text-[var(--ak-ink)]">
           <input type="checkbox" name="promo" value="true" defaultChecked={values.promo} />
           Promotion
@@ -121,6 +119,23 @@ function FilterFields({
   )
 }
 
+function buildSortHref(basePath: string, values: StoreFilterValues, tri: string) {
+  const params = new URLSearchParams()
+  if (values.categorie) params.set("categorie", values.categorie)
+  if (values.q) params.set("q", values.q)
+  if (values.prixMin) params.set("prixMin", values.prixMin)
+  if (values.prixMax) params.set("prixMax", values.prixMax)
+  if (values.disponibilite && values.disponibilite !== "all") {
+    params.set("disponibilite", values.disponibilite)
+  }
+  if (values.promo) params.set("promo", "true")
+  if (values.edition) params.set("edition", "true")
+  if (values.nouveau) params.set("nouveau", "true")
+  if (tri && tri !== "pertinence") params.set("tri", tri)
+  const qs = params.toString()
+  return qs ? `${basePath}?${qs}` : basePath
+}
+
 export function StoreFilters({
   basePath,
   values,
@@ -130,71 +145,71 @@ export function StoreFilters({
   values: StoreFilterValues
   hasActiveFilters: boolean
 }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
-  const resetHref = values.categorie ? `${basePath}?categorie=${values.categorie}` : basePath
+  const resetHref = values.categorie
+    ? `${basePath}?categorie=${values.categorie}`
+    : values.q
+      ? `${basePath}?q=${encodeURIComponent(values.q)}`
+      : basePath
 
   return (
-    <>
-      {/* Desktop : barre inline */}
-      <form method="get" action={basePath} className="hidden rounded-2xl bg-white p-4 md:block">
-        <FilterFields values={values} idPrefix="d" layout="row" />
-        <div className="mt-4 flex items-center gap-4">
-          <button
-            type="submit"
-            className="rounded-xl bg-[var(--ak-emerald-deep)] px-4 py-2 text-sm font-semibold text-[var(--ak-ivory)] hover:bg-[var(--ak-emerald-mid)]"
-          >
-            Filtrer
-          </button>
-          {hasActiveFilters && (
-            <a href={resetHref} className="text-sm text-[var(--ak-ink-soft)] underline-offset-2 hover:underline">
-              Réinitialiser
-            </a>
-          )}
-        </div>
-      </form>
+    <div className="flex items-center gap-2">
+      <label className="sr-only" htmlFor="store-sort-quick">
+        Trier
+      </label>
+      <select
+        id="store-sort-quick"
+        value={values.tri || "pertinence"}
+        onChange={(e) => router.push(buildSortHref(basePath, values, e.target.value))}
+        className="h-9 rounded-full border border-[var(--ak-ink)]/15 bg-white px-3 text-sm text-[var(--ak-ink)] outline-none focus:border-[var(--ak-emerald-mid)]"
+      >
+        {SORT_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
 
-      {/* Mobile : bouton + bottom sheet */}
-      <div className="md:hidden">
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--ak-ink)]/15 bg-white px-4 py-2 text-sm font-medium text-[var(--ak-ink)]"
-        >
-          <SlidersHorizontal className="size-4" aria-hidden />
-          Filtres
-          {hasActiveFilters && <span className="size-1.5 rounded-full bg-[var(--ak-gold)]" />}
-        </button>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--ak-ink)]/15 bg-white px-3.5 py-2 text-sm font-medium text-[var(--ak-ink)]"
+      >
+        <SlidersHorizontal className="size-4" aria-hidden />
+        Filtres
+        {hasActiveFilters && <span className="size-1.5 rounded-full bg-[var(--ak-gold)]" />}
+      </button>
 
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl">
-            <SheetHeader className="border-b border-[#E6DCC0]">
-              <SheetTitle className="font-[family-name:var(--font-amiri)] text-lg text-[var(--ak-emerald-deep)]">
-                Filtres
-              </SheetTitle>
-            </SheetHeader>
-            <form method="get" action={basePath} className="flex-1 overflow-y-auto px-4 pb-4">
-              <FilterFields values={values} idPrefix="m" layout="column" />
-              <SheetFooter className="sticky bottom-0 mt-5 bg-white px-0 pt-2">
-                <button
-                  type="submit"
-                  className="ak-cta-solid flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl">
+          <SheetHeader className="border-b border-[#E6DCC0]">
+            <SheetTitle className="font-[family-name:var(--font-amiri)] text-lg text-[var(--ak-emerald-deep)]">
+              Filtres
+            </SheetTitle>
+          </SheetHeader>
+          <form method="get" action={basePath} className="flex-1 overflow-y-auto px-4 pb-4">
+            <FilterFields values={values} idPrefix="f" />
+            <SheetFooter className="sticky bottom-0 mt-5 bg-white px-0 pt-2">
+              <button
+                type="submit"
+                className="ak-cta-solid flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
+              >
+                Voir les résultats
+              </button>
+              {hasActiveFilters && (
+                <a
+                  href={resetHref}
+                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-[var(--ak-ink)]/15 px-4 py-2.5 text-sm font-medium text-[var(--ak-ink)]"
                 >
-                  Voir les résultats
-                </button>
-                {hasActiveFilters && (
-                  <a
-                    href={resetHref}
-                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-[var(--ak-ink)]/15 px-4 py-2.5 text-sm font-medium text-[var(--ak-ink)]"
-                  >
-                    <X className="size-3.5" aria-hidden />
-                    Réinitialiser
-                  </a>
-                )}
-              </SheetFooter>
-            </form>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </>
+                  <X className="size-3.5" aria-hidden />
+                  Réinitialiser
+                </a>
+              )}
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+    </div>
   )
 }
