@@ -59,10 +59,10 @@ export async function POST(request: Request) {
   }
 
   const name = `${adherent.prenoms} ${adherent.nom}`.trim()
-  const token = await createMemberSessionToken({
-    adherentId: adherent.id,
-    name,
-  })
+  const token = await createMemberSessionToken(
+    { adherentId: adherent.id, name },
+    adherent.sessionVersion
+  )
 
   const res = NextResponse.json({
     ok: true,

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
-import { getMemberSession } from "@/lib/member-auth"
+import {
+  createMemberSessionToken,
+  getMemberSession,
+  MEMBER_COOKIE,
+  memberCookieOptions,
+} from "@/lib/member-auth"
 import { hashMemberPin, pinSetSchema } from "@/lib/member-pin"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
 
@@ -37,10 +42,18 @@ export async function POST(request: Request) {
   }
 
   const pinHash = await hashMemberPin(parsed.data.pin)
-  await prisma.adherent.update({
+  // sessionVersion incrémenté : invalide toute autre session /mon-espace déjà
+  // ouverte ailleurs (voir lib/member-auth.ts getMemberSession()) — un jeton
+  // frais est réémis juste après pour l'onglet courant, qui ne se retrouve
+  // donc pas déconnecté par sa propre action.
+  const adherent = await prisma.adherent.update({
     where: { id: session.adherentId },
-    data: { pinHash },
+    data: { pinHash, sessionVersion: { increment: 1 } },
+    select: { sessionVersion: true },
   })
 
-  return NextResponse.json({ ok: true })
+  const token = await createMemberSessionToken(session, adherent.sessionVersion)
+  const res = NextResponse.json({ ok: true })
+  res.cookies.set(MEMBER_COOKIE, token, memberCookieOptions())
+  return res
 }

@@ -78,6 +78,10 @@ model Adherent {
   /// jamais stocké en clair). Tant qu'il n'est pas défini, la connexion se
   /// fait avec les 4 derniers caractères du N° membre (cf. member-portal.ts).
   pinHash            String?
+  /// Incrémenté à chaque changement de PIN (par le membre ou par un admin) :
+  /// invalide toutes les sessions /mon-espace déjà émises, même celle-ci
+  /// n'a pas expiré — même mécanisme que User.sessionVersion côté admin.
+  sessionVersion     Int                 @default(0)
   /// Numéro d'ordre séquentiel selon la date d'adhésion (1 = premier membre
   /// inscrit). Distinct de numAdhesion (texte libre saisi par la cellule).
   /// Affiché sur le badge — voir lib/adherents.ts nextMemberNumber().

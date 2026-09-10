@@ -49,10 +49,10 @@ export async function POST(request: Request) {
   }
 
   const portal = await serializeMemberPortal(adherent)
-  const token = await createMemberSessionToken({
-    adherentId: adherent.id,
-    name: portal.name,
-  })
+  const token = await createMemberSessionToken(
+    { adherentId: adherent.id, name: portal.name },
+    adherent.sessionVersion
+  )
 
   const res = NextResponse.json({
     ok: true,

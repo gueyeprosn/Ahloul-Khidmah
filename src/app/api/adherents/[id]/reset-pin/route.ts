@@ -24,7 +24,9 @@ export async function POST(_request: Request, { params }: Params) {
 
   await prisma.adherent.update({
     where: { id },
-    data: { pinHash: null },
+    // sessionVersion incrémenté : invalide toute session /mon-espace déjà
+    // ouverte sur cet appareil (voir lib/member-auth.ts getMemberSession()).
+    data: { pinHash: null, sessionVersion: { increment: 1 } },
   })
 
   return NextResponse.json({ ok: true })

@@ -58,6 +58,7 @@ const adherentSelect = {
   createdAt: true,
   memberNumber: true,
   photoUrl: true,
+  sessionVersion: true,
 } as const
 
 const cotisationsSelect = {
