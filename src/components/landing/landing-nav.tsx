@@ -8,6 +8,7 @@ import { IdCard, Search, ShoppingBag } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/landing/locale-provider"
 import { useCart } from "@/components/store/cart-provider"
+import { STORE_PUBLIC_ENABLED } from "@/lib/store/store-status"
 import type { Locale } from "@/i18n/landing"
 
 /** Pages dont le haut est un hero vert foncé — nav ivoire transparente OK. */
@@ -46,7 +47,7 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
     { href: "/qui-sommes-nous", label: dict.nav.about },
     { href: "#adhesion", label: dict.nav.adhesion },
     { href: "#contribuer", label: dict.nav.contribute },
-    { href: "/boutique", label: dict.nav.store },
+    ...(STORE_PUBLIC_ENABLED ? [{ href: "/boutique", label: dict.nav.store }] : []),
     { href: "/mediatheque", label: dict.nav.mediatheque },
     { href: "#faq", label: dict.nav.faq },
   ] as const
@@ -64,10 +65,6 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  useEffect(() => {
-    setScrolled(window.scrollY > 24)
   }, [pathname])
 
   useEffect(() => {
@@ -154,34 +151,38 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
             </button>
           </div>
 
-          <button
-            type="button"
-            aria-label="Rechercher un produit (Ctrl+K)"
-            className="hidden size-9 items-center justify-center rounded-full text-[var(--ak-ivory)]/85 transition-colors hover:bg-white/10 hover:text-[var(--ak-gold-light)] sm:inline-flex"
-            onClick={() => {
-              setOpen(false)
-              window.dispatchEvent(new Event("ak-open-store-search"))
-            }}
-          >
-            <Search className="size-5" aria-hidden />
-          </button>
+          {STORE_PUBLIC_ENABLED && (
+            <>
+              <button
+                type="button"
+                aria-label="Rechercher un produit (Ctrl+K)"
+                className="hidden size-9 items-center justify-center rounded-full text-[var(--ak-ivory)]/85 transition-colors hover:bg-white/10 hover:text-[var(--ak-gold-light)] sm:inline-flex"
+                onClick={() => {
+                  setOpen(false)
+                  window.dispatchEvent(new Event("ak-open-store-search"))
+                }}
+              >
+                <Search className="size-5" aria-hidden />
+              </button>
 
-          <button
-            type="button"
-            aria-label="Panier"
-            className="relative inline-flex size-9 items-center justify-center rounded-full text-[var(--ak-ivory)]/85 transition-colors hover:bg-white/10 hover:text-[var(--ak-gold-light)]"
-            onClick={() => {
-              setOpen(false)
-              openDrawer()
-            }}
-          >
-            <ShoppingBag className="size-5" aria-hidden />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[var(--ak-gold)] text-[10px] font-bold text-[var(--ak-emerald-deep)]">
-                {itemCount > 9 ? "9+" : itemCount}
-              </span>
-            )}
-          </button>
+              <button
+                type="button"
+                aria-label="Panier"
+                className="relative inline-flex size-9 items-center justify-center rounded-full text-[var(--ak-ivory)]/85 transition-colors hover:bg-white/10 hover:text-[var(--ak-gold-light)]"
+                onClick={() => {
+                  setOpen(false)
+                  openDrawer()
+                }}
+              >
+                <ShoppingBag className="size-5" aria-hidden />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[var(--ak-gold)] text-[10px] font-bold text-[var(--ak-emerald-deep)]">
+                    {itemCount > 9 ? "9+" : itemCount}
+                  </span>
+                )}
+              </button>
+            </>
+          )}
 
           {!isMember ? (
             <>

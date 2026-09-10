@@ -5,12 +5,13 @@ import Link from "next/link"
 import { Mail, MapPin, Phone } from "lucide-react"
 import { contact } from "@/content/landing"
 import { useLocale } from "@/components/landing/locale-provider"
+import { STORE_PUBLIC_ENABLED } from "@/lib/store/store-status"
 
 const FOOTER_LINKS = [
   { href: "/qui-sommes-nous", key: "about" as const },
   { href: "/adhesion", key: "adhesion" as const },
   { href: "/contribuer", key: "contribute" as const },
-  { href: "/boutique", key: "store" as const },
+  ...(STORE_PUBLIC_ENABLED ? [{ href: "/boutique", key: "store" as const }] : []),
   { href: "/mon-espace", key: "monEspace" as const },
   { href: "/mediatheque", key: "mediatheque" as const },
   { href: "/mission", key: "mission" as const },

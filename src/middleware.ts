@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { jwtVerify } from "jose"
 import { AUTH_COOKIE, safeInternalPath } from "@/lib/auth-shared"
+import { STORE_PUBLIC_ENABLED } from "@/lib/store/store-status"
 
 const protectedPrefixes = [
   "/dashboard",
@@ -126,6 +127,23 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const method = request.method
 
+  // --- Boutique masquée temporairement : pages publiques redirigées, création
+  // de commande bloquée server-side. /admin/boutique reste accessible (déjà
+  // protégé plus bas comme le reste de /admin) pour continuer à gérer le
+  // catalogue/stock pendant que la vitrine publique est masquée. Voir
+  // lib/store/store-status.ts pour rouvrir.
+  if (!STORE_PUBLIC_ENABLED) {
+    if (pathname === "/boutique" || pathname.startsWith("/boutique/")) {
+      return NextResponse.redirect(new URL("/", request.url))
+    }
+    if (pathname === "/api/store/checkout" && method === "POST") {
+      return NextResponse.json(
+        { error: "La boutique est temporairement fermée." },
+        { status: 503 }
+      )
+    }
+  }
+
   // --- API protection ---
   if (isApi(pathname)) {
     if (isPublicApi(pathname, method)) {
@@ -208,6 +226,8 @@ export const config = {
     "/temoignages/:path*",
     "/journal/:path*",
     "/admin/:path*",
+    "/boutique",
+    "/boutique/:path*",
     "/api/:path*",
   ],
 }
