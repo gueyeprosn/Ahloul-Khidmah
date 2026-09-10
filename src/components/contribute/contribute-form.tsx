@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { Check, Loader2 } from "lucide-react"
 import {
   CONTRIBUTION_AMOUNTS,
   CONTRIBUTION_CAMPAGNES,
@@ -388,8 +388,8 @@ export function ContributeForm({
       />
 
       <div className="flex items-start gap-2.5 rounded-2xl border border-[var(--ak-gold)] bg-[var(--ak-ivory)] px-4 py-4 text-sm text-[var(--ak-ink-soft)] md:px-5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] font-[family-name:var(--font-amiri)] text-[var(--ak-gold-light)]">
-          ✓
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] text-[var(--ak-gold-light)]">
+          <Check className="size-4" aria-hidden />
         </span>
         <p>
           <strong className="text-[var(--ak-emerald-deep)]">{t.title}</strong>

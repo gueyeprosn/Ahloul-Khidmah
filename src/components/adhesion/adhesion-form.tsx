@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { Check, Loader2 } from "lucide-react"
 import {
   adhesionAdminSchema,
   adhesionLightSchema,
@@ -398,11 +398,11 @@ function AdhesionFormLight({
       >
         <span
           className={cn(
-            "flex shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] font-[family-name:var(--font-amiri)] text-[var(--ak-gold-light)]",
-            compact ? "size-8 text-base" : "size-9 text-lg md:size-10"
+            "flex shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] text-[var(--ak-gold-light)]",
+            compact ? "size-8" : "size-9 md:size-10"
           )}
         >
-          ✓
+          <Check className={compact ? "size-4" : "size-5"} aria-hidden />
         </span>
         <p className={compact ? "text-sm" : "md:text-base"}>
           {t.light.intro.before}{" "}
@@ -643,8 +643,8 @@ function AdhesionFormAdmin({
       <Honeypot register={register} />
 
       <div className="flex items-start gap-3 rounded-2xl border border-[var(--ak-gold)] bg-[var(--ak-ivory)] px-4 py-4 text-sm text-[var(--ak-ink-soft)] md:px-5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] font-[family-name:var(--font-amiri)] text-[var(--ak-gold-light)]">
-          ✓
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] text-[var(--ak-gold-light)]">
+          <Check className="size-4" aria-hidden />
         </span>
         <p>
           Le <strong className="text-[var(--ak-emerald-deep)]">N° d&apos;adhésion</strong>{" "}
