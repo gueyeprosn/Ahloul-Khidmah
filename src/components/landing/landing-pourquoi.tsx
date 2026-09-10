@@ -29,24 +29,26 @@ export function LandingPourquoi() {
           {dict.why.intro}
         </p>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2">
           {dict.why.items.map((item, i) => {
             const Icon = icons[item.icon]
             return (
               <article
                 key={item.title}
-                className="ak-reveal rounded-2xl border border-[#E6DCC0] bg-white p-6 shadow-[0_10px_30px_rgba(11,58,37,0.06)]"
+                className="ak-reveal flex items-start gap-4 border-[var(--ak-gold)]/50 border-s-2 ps-5"
                 style={{ animationDelay: `${i * 70}ms` }}
               >
-                <div className="flex size-11 items-center justify-center rounded-xl bg-[var(--ak-emerald-deep)] text-[var(--ak-gold-light)]">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--ak-emerald-deep)] text-[var(--ak-gold-light)]">
                   <Icon className="size-5" aria-hidden />
                 </div>
-                <h3 className="mt-5 font-[family-name:var(--font-amiri)] text-2xl text-[var(--ak-emerald-deep)]">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--ak-ink-soft)]">
-                  {item.text}
-                </p>
+                <div>
+                  <h3 className="font-[family-name:var(--font-amiri)] text-xl text-[var(--ak-emerald-deep)]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--ak-ink-soft)]">
+                    {item.text}
+                  </p>
+                </div>
               </article>
             )
           })}
