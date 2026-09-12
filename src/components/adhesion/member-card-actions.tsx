@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Download, Loader2, MessageCircle } from "lucide-react"
+import { Download, Loader2, MessageCircle, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { InlineMessage } from "@/components/shared/inline-message"
 import { contact } from "@/content/landing"
@@ -10,6 +10,7 @@ import {
   type MemberBadgeData,
 } from "@/lib/member-badge"
 import {
+  dataUrlToFile,
   downloadDataUrl,
   renderMemberBadgePng,
 } from "@/lib/member-badge-client"
@@ -31,12 +32,17 @@ type Props = {
   }
   className?: string
   compact?: boolean
+  /** "whatsapp" (défaut) : envoi direct à l'adhérent. "share" : partage natif
+   * de l'image (réseaux sociaux, enregistrer sur l'appareil…) — utilisé
+   * depuis /mon-espace, où l'adhérent partage sa propre carte lui-même. */
+  variant?: "whatsapp" | "share"
 }
 
 export function MemberCardActions({
   member,
   className,
   compact = false,
+  variant = "whatsapp",
 }: Props) {
   const [badgeDataUrl, setBadgeDataUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(true)
@@ -106,16 +112,18 @@ export function MemberCardActions({
       .catch(() => {
         if (!cancelled) setPreviewLoading(false)
       })
-    void fetch("/api/whatsapp/status")
-      .then((r) => r.json())
-      .then((d: { cloud?: boolean }) => {
-        if (!cancelled) setCloud(Boolean(d.cloud))
-      })
-      .catch(() => {})
+    if (variant === "whatsapp") {
+      void fetch("/api/whatsapp/status")
+        .then((r) => r.json())
+        .then((d: { cloud?: boolean }) => {
+          if (!cancelled) setCloud(Boolean(d.cloud))
+        })
+        .catch(() => {})
+    }
     return () => {
       cancelled = true
     }
-  }, [badgeInput])
+  }, [badgeInput, variant])
 
   const openWaMe = useCallback(() => {
     const url = buildMemberCardWaMeUrl(badgeInput)
@@ -202,6 +210,41 @@ export function MemberCardActions({
     }
   }
 
+  /** Partage natif de l'image (réseaux sociaux, messagerie, enregistrer sur
+   * l'appareil…) via la feuille de partage du système. Si l'appareil ne
+   * supporte pas le partage de fichiers, la carte est téléchargée à la
+   * place — l'action reste toujours utile. */
+  async function onShare() {
+    setBusy("send")
+    setMsg(null)
+    const filename = `ahloul-khidmah-carte-${member.id}.png`
+    try {
+      const dataUrl = await ensureBadge()
+      const file = dataUrlToFile(dataUrl, filename)
+      const shareData: ShareData = {
+        files: [file],
+        title: "Ma carte membre Ahloul Khidmah",
+        text: "Voici ma carte membre Ahloul Khidmah.",
+      }
+      if (navigator.canShare?.(shareData)) {
+        await navigator.share(shareData)
+        setMsg({ type: "success", text: "Partage ouvert." })
+        return
+      }
+      downloadDataUrl(dataUrl, filename)
+      setMsg({
+        type: "success",
+        text: "Partage non disponible sur cet appareil — carte téléchargée à la place.",
+      })
+    } catch (e) {
+      // L'utilisateur a fermé la feuille de partage sans choisir — pas une erreur.
+      if (e instanceof Error && e.name === "AbortError") return
+      setMsg({ type: "error", text: "Partage impossible." })
+    } finally {
+      setBusy(null)
+    }
+  }
+
   return (
     <div className={cn("space-y-4", className)}>
       {!compact ? (
@@ -251,39 +294,62 @@ export function MemberCardActions({
           )}
           Télécharger la carte
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => void sendWhatsApp()}
-          disabled={busy !== null}
-          className="h-auto rounded-2xl border-[var(--ak-emerald-deep)] px-5 py-3 text-[var(--ak-emerald-deep)]"
-        >
-          {busy === "send" ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <MessageCircle className="size-4" />
-          )}
-          Envoyer par WhatsApp
-        </Button>
+        {variant === "share" ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void onShare()}
+            disabled={busy !== null}
+            className="h-auto rounded-2xl border-[var(--ak-emerald-deep)] px-5 py-3 text-[var(--ak-emerald-deep)]"
+          >
+            {busy === "send" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Share2 className="size-4" />
+            )}
+            Partager
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void sendWhatsApp()}
+            disabled={busy !== null}
+            className="h-auto rounded-2xl border-[var(--ak-emerald-deep)] px-5 py-3 text-[var(--ak-emerald-deep)]"
+          >
+            {busy === "send" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <MessageCircle className="size-4" />
+            )}
+            Envoyer par WhatsApp
+          </Button>
+        )}
       </div>
 
       {msg ? <InlineMessage message={msg.text} variant={msg.type} /> : null}
 
-      <p className="text-center text-xs text-[var(--ak-ink-soft)]">
-        {cloud
-          ? "Envoi Cloud WhatsApp activé (image + message)."
-          : "Mode lien WhatsApp — l’adhérent confirme l’envoi. Contact asso : "}
-        {!cloud ? (
-          <a
-            href={contact.whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            {contact.whatsappDisplay}
-          </a>
-        ) : null}
-      </p>
+      {variant === "whatsapp" ? (
+        <p className="text-center text-xs text-[var(--ak-ink-soft)]">
+          {cloud
+            ? "Envoi Cloud WhatsApp activé (image + message)."
+            : "Mode lien WhatsApp — l’adhérent confirme l’envoi. Contact asso : "}
+          {!cloud ? (
+            <a
+              href={contact.whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              {contact.whatsappDisplay}
+            </a>
+          ) : null}
+        </p>
+      ) : (
+        <p className="text-center text-xs text-[var(--ak-ink-soft)]">
+          Partagez l’image vers vos réseaux ou une messagerie, ou enregistrez-la sur votre appareil.
+        </p>
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import QRCode from "qrcode"
 import { BADGE_HEIGHT, BADGE_WIDTH, type MemberBadgeData } from "@/lib/member-badge"
 import {
   BADGE_FONT_FAMILY,
+  PHOTO_COVER_LIFT,
   PHOTO_COVER_ZOOM,
 } from "@/lib/member-badge-design"
 import { circularPhotoCover } from "@/lib/member-badge-photo"
@@ -91,7 +92,8 @@ export async function renderMemberBadgePng(data: MemberBadgeData): Promise<strin
           cx,
           cy,
           size,
-          PHOTO_COVER_ZOOM
+          PHOTO_COVER_ZOOM,
+          PHOTO_COVER_LIFT
         )
         ctx.drawImage(photo, sx, sy, side, side, dx, dy, draw, draw)
         ctx.restore()
@@ -119,4 +121,20 @@ export function downloadDataUrl(dataUrl: string, filename: string) {
 export function dataUrlToBase64(dataUrl: string) {
   const i = dataUrl.indexOf(",")
   return i >= 0 ? dataUrl.slice(i + 1) : dataUrl
+}
+
+/**
+ * Convertit le data URL du badge en fichier image — pour le partage natif
+ * (Web Share API). Décodage base64 pur, sans fetch() : le CSP du site
+ * (connect-src) n'autorise pas les requêtes vers des data: URL.
+ */
+export function dataUrlToFile(dataUrl: string, filename: string): File {
+  const [header, base64] = dataUrl.split(",")
+  const mime = /data:(.*?);base64/.exec(header)?.[1] || "image/png"
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return new File([bytes], filename, { type: mime })
 }

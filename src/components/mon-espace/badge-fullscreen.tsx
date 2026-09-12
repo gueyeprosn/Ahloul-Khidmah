@@ -50,7 +50,7 @@ export function BadgeFullscreen({
         </div>
 
         <div className="mt-4 flex-1 rounded-2xl border border-[var(--ak-gold)]/45 bg-white p-5 shadow-[0_12px_36px_rgba(11,58,37,0.08)]">
-          <MemberCardActions member={member} />
+          <MemberCardActions member={member} variant="share" />
         </div>
 
         <div className="mt-5">
