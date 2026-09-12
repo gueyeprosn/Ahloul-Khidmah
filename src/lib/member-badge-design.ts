@@ -23,7 +23,8 @@ export const BADGE_FONT_FAMILY = "Playfair Display"
  * QR : moitié droite du cadre vérification (ne pas dépasser x≈800).
  */
 export const TEMPLATE_LAYOUT = {
-  photo: { cx: 509, cy: 687, size: 242 },
+  /** Légèrement remonté pour caler le visage dans le disque or du modèle. */
+  photo: { cx: 508, cy: 675, size: 242 },
   cardLabel: { y: 866, coverY: 820, coverH: 52 },
   prenom: { y: 922 },
   nom: { y: 972 },
@@ -47,7 +48,10 @@ export const BADGE_TYPE = {
   cellule: `600 15px '${BADGE_FONT_FAMILY}'`,
 } as const
 
-/** Zoom cover léger — photo centrée dans le cercle (pas de décalage). */
-export const PHOTO_COVER_ZOOM = 1.05
-/** @deprecated Conservé à 0 : la photo est centrée dans le disque. */
-export const PHOTO_COVER_LIFT = 0
+/** Zoom cover léger dans le cercle. */
+export const PHOTO_COVER_ZOOM = 1.08
+/**
+ * Remonte la photo dans le disque (px). Positif = visage plus haut
+ * dans le cercle réservé.
+ */
+export const PHOTO_COVER_LIFT = 18

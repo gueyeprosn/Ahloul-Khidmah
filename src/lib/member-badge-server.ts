@@ -4,6 +4,7 @@ import QRCode from "qrcode"
 import { BADGE_HEIGHT, BADGE_WIDTH, type MemberBadgeData } from "@/lib/member-badge"
 import {
   BADGE_FONT_FAMILY,
+  PHOTO_COVER_LIFT,
   PHOTO_COVER_ZOOM,
 } from "@/lib/member-badge-design"
 import { circularPhotoCover } from "@/lib/member-badge-photo"
@@ -69,7 +70,8 @@ export async function renderMemberBadgePngBuffer(
           cx,
           cy,
           size,
-          PHOTO_COVER_ZOOM
+          PHOTO_COVER_ZOOM,
+          PHOTO_COVER_LIFT
         )
         ctx.drawImage(photo, sx, sy, side, side, dx, dy, draw, draw)
         ctx.restore()

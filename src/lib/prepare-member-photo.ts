@@ -20,7 +20,7 @@ export async function prepareMemberPhoto(
   // Portraits : biais haut pour garder le visage dans le cercle
   const sy =
     bitmap.height > bitmap.width * 1.05
-      ? Math.max(0, (bitmap.height - side) * 0.22)
+      ? Math.max(0, (bitmap.height - side) * 0.18)
       : (bitmap.height - side) / 2
 
   const out = Math.min(maxEdge, side)
