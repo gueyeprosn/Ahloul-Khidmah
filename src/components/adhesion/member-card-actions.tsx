@@ -232,10 +232,6 @@ export function MemberCardActions({
         return
       }
       downloadDataUrl(dataUrl, filename)
-      setMsg({
-        type: "success",
-        text: "Partage non disponible sur cet appareil — carte téléchargée à la place.",
-      })
     } catch (e) {
       // L'utilisateur a fermé la feuille de partage sans choisir — pas une erreur.
       if (e instanceof Error && e.name === "AbortError") return
