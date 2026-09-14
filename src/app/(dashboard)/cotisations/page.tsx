@@ -6,6 +6,7 @@ import {
 import { parseMontantFcfa } from "@/lib/adherents"
 import { prisma } from "@/lib/db"
 import { parsePeriode } from "@/lib/periode"
+import { sortCotisationRows } from "@/lib/cotisations-sort"
 
 export const metadata = { title: "Cotisations" }
 
@@ -27,24 +28,26 @@ export default async function CotisationsPage({
   ])
 
   const paidMap = new Map(paiements.map((p) => [p.adherentId, p]))
-  const rows: CotisationRow[] = actifs.map((a) => {
-    const paid = paidMap.get(a.id)
-    return {
-      adherentId: a.id,
-      nom: a.nom,
-      prenoms: a.prenoms,
-      tel: a.tel,
-      celluleLocale: a.celluleLocale,
-      canal: a.canal,
-      expected: parseMontantFcfa(a.montant, a.montantAutre),
-      periode,
-      statut: paid?.statut === "paye" ? "paye" : "en_retard",
-      cotisationId: paid?.id ?? null,
-      paidAt: paid?.paidAt?.toISOString() ?? null,
-      montantPaye: paid?.montant ?? null,
-      paidCanal: paid?.canal ?? null,
-    }
-  })
+  const rows: CotisationRow[] = sortCotisationRows(
+    actifs.map((a) => {
+      const paid = paidMap.get(a.id)
+      return {
+        adherentId: a.id,
+        nom: a.nom,
+        prenoms: a.prenoms,
+        tel: a.tel,
+        celluleLocale: a.celluleLocale,
+        canal: a.canal,
+        expected: parseMontantFcfa(a.montant, a.montantAutre),
+        periode,
+        statut: paid?.statut === "paye" ? "paye" : "en_retard",
+        cotisationId: paid?.id ?? null,
+        paidAt: paid?.paidAt?.toISOString() ?? null,
+        montantPaye: paid?.montant ?? null,
+        paidCanal: paid?.canal ?? null,
+      }
+    })
+  )
 
   return (
     <>
