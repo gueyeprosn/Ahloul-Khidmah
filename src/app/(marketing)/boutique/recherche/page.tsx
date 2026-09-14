@@ -15,7 +15,7 @@ import { getReviewStatsForProducts } from "@/lib/store/reviews"
 import { buildMetadata } from "@/lib/seo"
 
 export const metadata: Metadata = buildMetadata({
-  title: "Recherche — Ahloul Khidmah Store",
+  title: "Recherche — Barkelu",
   path: "/boutique/recherche",
   noIndex: true,
 })
@@ -72,7 +72,7 @@ export default async function RecherchePage({
       <BreadcrumbJsonLd
         items={[
           { name: "Accueil", path: "/" },
-          { name: "Boutique", path: "/boutique" },
+          { name: "Barkelu", path: "/boutique" },
           { name: "Recherche", path: "/boutique/recherche" },
         ]}
       />
@@ -82,7 +82,7 @@ export default async function RecherchePage({
           <ol className="flex flex-wrap items-center gap-2">
             <li><Link href="/" className="hover:underline">Accueil</Link></li>
             <li aria-hidden>/</li>
-            <li><Link href="/boutique" className="hover:underline">Boutique</Link></li>
+            <li><Link href="/boutique" className="hover:underline">Barkelu</Link></li>
             <li aria-hidden>/</li>
             <li className="text-[var(--ak-ink)]">Recherche</li>
           </ol>
@@ -119,7 +119,7 @@ export default async function RecherchePage({
             <Search className="size-10 text-[var(--ak-ink-soft)]/40" aria-hidden />
             <p className="text-[var(--ak-ink-soft)]">Aucun produit trouvé pour « {q} ».</p>
             <Link href="/boutique" className="ak-cta-solid mt-2 rounded-2xl px-5 py-3 text-sm font-semibold">
-              Découvrir la boutique
+              Découvrir Barkelu
             </Link>
           </div>
         ) : (

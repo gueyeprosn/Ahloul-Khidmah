@@ -5,9 +5,10 @@
  * gérables normalement depuis /admin/boutique pendant que la vitrine
  * publique est masquée.
  *
- * Pour rouvrir la boutique : repasser cette valeur à true, puis
+ * Pour masquer à nouveau : repasser cette valeur à false, puis
  * build + déployer. Voir middleware.ts (redirection des pages publiques
  * et blocage du checkout), landing-nav.tsx et landing-footer.tsx (lien
  * et icônes retirés du menu et du pied de page tant que c'est à false).
+ * Rouverte le 14/09/2026, boutique renommée « Barkelu ».
  */
-export const STORE_PUBLIC_ENABLED = false
+export const STORE_PUBLIC_ENABLED = true

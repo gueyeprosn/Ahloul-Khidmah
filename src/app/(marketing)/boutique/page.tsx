@@ -20,7 +20,7 @@ import { buildMetadata } from "@/lib/seo"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = buildMetadata({
-  title: "Boutique — Ahloul Khidmah Store",
+  title: "Barkelu — Ahloul Khidmah",
   description:
     "Porter nos valeurs, soutenir nos actions. Pins, porte-clés, textile et papeterie Ahloul Khidmah — paiement sécurisé, livraison au Sénégal.",
   path: "/boutique",
@@ -76,7 +76,7 @@ export default async function BoutiquePage({
       <BreadcrumbJsonLd
         items={[
           { name: "Accueil", path: "/" },
-          { name: "Boutique", path: "/boutique" },
+          { name: "Barkelu", path: "/boutique" },
         ]}
       />
 
@@ -92,11 +92,11 @@ export default async function BoutiquePage({
                   </Link>
                 </li>
                 <li aria-hidden>/</li>
-                <li className="text-[var(--ak-ivory)]/75">Boutique</li>
+                <li className="text-[var(--ak-ivory)]/75">Barkelu</li>
               </ol>
             </nav>
             <h1 className="font-[family-name:var(--font-amiri)] text-2xl leading-tight text-[var(--ak-ivory)] md:text-3xl">
-              Boutique
+              Barkelu
             </h1>
             <p className="mt-1 text-sm text-[var(--ak-ivory)]/65">
               Pins, textile & papeterie — au service de la khidma

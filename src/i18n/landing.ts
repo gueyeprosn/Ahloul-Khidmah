@@ -105,7 +105,7 @@ export const dictionaries: Record<Locale, LandingDict> = {
       voirBadge: "Voir mon badge",
       mediatheque: "Médiathèque",
       about: "Qui sommes-nous",
-      store: "Boutique",
+      store: "Barkelu",
     },
     hero: {
       brand: "Ahloul Khidmah",
@@ -286,7 +286,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       monEspace: "Mon espace",
       mediatheque: "Médiathèque",
       about: "Qui sommes-nous",
-      store: "Boutique",
+      store: "Barkelu",
     },
     contact: {
       address: "Touba, Sénégal",
@@ -306,7 +306,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       monEspace: "مساحتي",
       voirBadge: "عرض بطاقتي",
       about: "من نحن",
-      store: "المتجر",
+      store: "Barkelu",
     },
     hero: {
       brand: "أهل الخدمة",
@@ -483,7 +483,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       monEspace: "مساحتي",
       mediatheque: "المعرض",
       about: "من نحن",
-      store: "المتجر",
+      store: "Barkelu",
     },
     contact: {
       address: "طوبى، السنغال",

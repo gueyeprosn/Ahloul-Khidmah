@@ -44,7 +44,7 @@ export async function notifyOrderPaid(order: NotifiableOrder) {
     "",
     `Total : ${formatFcfa(order.total)}`,
     "",
-    "Ahloul Khidmah Store",
+    "Barkelu",
   ].join("\n")
   await sendOrderNotification(order, `Commande ${order.orderNumber} confirmée`, body)
 }

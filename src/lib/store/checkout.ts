@@ -250,7 +250,7 @@ export async function createStoreOrder(input: StoreCheckoutInput) {
   try {
     const invoice = await createCheckoutInvoice({
       amount: total,
-      description: `Commande ${order.orderNumber} — Ahloul Khidmah Store`,
+      description: `Commande ${order.orderNumber} — Barkelu`,
       paymentId: order.id,
       type: "boutique",
       customer: {

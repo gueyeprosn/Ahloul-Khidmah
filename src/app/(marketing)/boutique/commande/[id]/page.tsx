@@ -11,7 +11,7 @@ import { ProductReviewForm } from "@/components/store/product-review-form"
 
 export const metadata: Metadata = buildMetadata({
   title: "Votre commande",
-  description: "Confirmation de commande Ahloul Khidmah Store.",
+  description: "Confirmation de commande Barkelu.",
   path: "/boutique/commande",
   noIndex: true,
 })

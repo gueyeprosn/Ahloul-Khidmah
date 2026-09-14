@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!result) return buildMetadata({ title: "Produit", path: `/boutique/produits/${slug}` })
   const { product } = result
   return buildMetadata({
-    title: `${product.name} — Ahloul Khidmah Store`,
+    title: `${product.name} — Barkelu`,
     description: product.description.slice(0, 160),
     path: `/boutique/produits/${product.slug}`,
     image: product.images[0]
@@ -64,7 +64,7 @@ export default async function ProduitPage({ params }: Params) {
       <BreadcrumbJsonLd
         items={[
           { name: "Accueil", path: "/" },
-          { name: "Boutique", path: "/boutique" },
+          { name: "Barkelu", path: "/boutique" },
           { name: product.name, path: `/boutique/produits/${product.slug}` },
         ]}
       />
@@ -84,7 +84,7 @@ export default async function ProduitPage({ params }: Params) {
           <ol className="flex flex-wrap items-center gap-2">
             <li><Link href="/" className="hover:underline">Accueil</Link></li>
             <li aria-hidden>/</li>
-            <li><Link href="/boutique" className="hover:underline">Boutique</Link></li>
+            <li><Link href="/boutique" className="hover:underline">Barkelu</Link></li>
             <li aria-hidden>/</li>
             <li className="text-[var(--ak-ink)]">{product.name}</li>
           </ol>

@@ -34,7 +34,7 @@ export function StoreCartDrawer() {
               onClick={closeDrawer}
               className="ak-cta-solid rounded-2xl px-4 py-2.5 text-sm font-semibold"
             >
-              Découvrir la boutique
+              Découvrir Barkelu
             </Link>
           </div>
         ) : (

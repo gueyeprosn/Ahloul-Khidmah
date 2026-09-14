@@ -57,7 +57,7 @@ export const mainNav: NavGroup[] = [
     ],
   },
   {
-    label: "Boutique",
+    label: "Barkelu",
     items: [
       { title: "Produits", href: "/admin/boutique/produits", icon: ShoppingBag },
       { title: "Collections", href: "/admin/boutique/collections", icon: Layers },

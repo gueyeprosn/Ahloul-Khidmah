@@ -170,7 +170,7 @@ export default function CheckoutPage() {
         <Package className="mx-auto size-10 text-[var(--ak-ink-soft)]/40" aria-hidden />
         <p className="mt-4 text-[var(--ak-ink-soft)]">Votre panier est vide.</p>
         <Link href="/boutique" className="ak-cta-solid mt-4 inline-flex rounded-2xl px-5 py-3 text-sm font-semibold">
-          Découvrir la boutique
+          Découvrir Barkelu
         </Link>
       </section>
     )
@@ -182,7 +182,7 @@ export default function CheckoutPage() {
         <ol className="flex flex-wrap items-center gap-2">
           <li><Link href="/" className="hover:underline">Accueil</Link></li>
           <li aria-hidden>/</li>
-          <li><Link href="/boutique" className="hover:underline">Boutique</Link></li>
+          <li><Link href="/boutique" className="hover:underline">Barkelu</Link></li>
           <li aria-hidden>/</li>
           <li><Link href="/boutique/panier" className="hover:underline">Panier</Link></li>
           <li aria-hidden>/</li>

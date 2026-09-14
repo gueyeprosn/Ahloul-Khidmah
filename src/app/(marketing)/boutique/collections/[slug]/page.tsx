@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!result) return buildMetadata({ title: "Collection", path: `/boutique/collections/${slug}` })
   const { collection } = result
   return buildMetadata({
-    title: `${collection.name} — Ahloul Khidmah Store`,
+    title: `${collection.name} — Barkelu`,
     description: (collection.tagline || collection.description).slice(0, 160),
     path: `/boutique/collections/${collection.slug}`,
     image: collection.bannerImage
@@ -56,7 +56,7 @@ export default async function CollectionDetailPage({ params }: Params) {
       <BreadcrumbJsonLd
         items={[
           { name: "Accueil", path: "/" },
-          { name: "Boutique", path: "/boutique" },
+          { name: "Barkelu", path: "/boutique" },
           { name: "Collections", path: "/boutique/collections" },
           { name: collection.name, path: `/boutique/collections/${collection.slug}` },
         ]}

@@ -7,7 +7,7 @@ import { getActiveCollections } from "@/lib/store/collections"
 import { buildMetadata } from "@/lib/seo"
 
 export const metadata: Metadata = buildMetadata({
-  title: "Collections — Ahloul Khidmah Store",
+  title: "Collections — Barkelu",
   description: "Nos collections éditoriales — sélections thématiques, saisonnières et événementielles.",
   path: "/boutique/collections",
 })
@@ -29,7 +29,7 @@ export default async function CollectionsPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Accueil", path: "/" },
-          { name: "Boutique", path: "/boutique" },
+          { name: "Barkelu", path: "/boutique" },
           { name: "Collections", path: "/boutique/collections" },
         ]}
       />
@@ -46,7 +46,7 @@ export default async function CollectionsPage() {
               <li aria-hidden className="text-[var(--ak-gold)]/60">/</li>
               <li>
                 <Link href="/boutique" className="hover:text-[var(--ak-gold-light)]">
-                  Boutique
+                  Barkelu
                 </Link>
               </li>
               <li aria-hidden className="text-[var(--ak-gold)]/60">/</li>

@@ -27,7 +27,7 @@ export default function PanierPage() {
         <ol className="flex flex-wrap items-center gap-2">
           <li><Link href="/" className="hover:underline">Accueil</Link></li>
           <li aria-hidden>/</li>
-          <li><Link href="/boutique" className="hover:underline">Boutique</Link></li>
+          <li><Link href="/boutique" className="hover:underline">Barkelu</Link></li>
           <li aria-hidden>/</li>
           <li className="text-[var(--ak-ink)]">Panier</li>
         </ol>
@@ -45,7 +45,7 @@ export default function PanierPage() {
             href="/boutique"
             className="ak-cta-solid rounded-2xl px-5 py-3 text-sm font-semibold"
           >
-            Découvrir la boutique
+            Découvrir Barkelu
           </Link>
         </div>
       ) : (
