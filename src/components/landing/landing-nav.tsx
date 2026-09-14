@@ -4,10 +4,11 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { IdCard, Search, ShoppingBag } from "lucide-react"
+import { IdCard, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/landing/locale-provider"
 import { useCart } from "@/components/store/cart-provider"
+import { ShoppingBagIcon } from "@/components/store/shopping-bag-icon"
 import { STORE_PUBLIC_ENABLED } from "@/lib/store/store-status"
 import type { Locale } from "@/i18n/landing"
 
@@ -174,7 +175,7 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
                   openDrawer()
                 }}
               >
-                <ShoppingBag className="size-5" aria-hidden />
+                <ShoppingBagIcon size={20} aria-hidden />
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[var(--ak-gold)] text-[10px] font-bold text-[var(--ak-emerald-deep)]">
                     {itemCount > 9 ? "9+" : itemCount}
