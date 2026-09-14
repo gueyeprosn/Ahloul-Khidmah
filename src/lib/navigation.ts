@@ -6,6 +6,7 @@ import {
   MapPinned,
   Sparkles,
   BarChart3,
+  LineChart,
   Settings,
   Images,
   MessageSquareQuote,
@@ -47,6 +48,7 @@ export const mainNav: NavGroup[] = [
       { title: "Cellules", href: "/cellules", icon: MapPinned },
       { title: "Professions", href: "/competences", icon: Sparkles },
       { title: "Rapports", href: "/rapports", icon: BarChart3 },
+      { title: "Collectes", href: "/rapports/collectes", icon: LineChart },
     ],
   },
   {
