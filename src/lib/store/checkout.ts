@@ -33,13 +33,23 @@ async function reserveLine(productId: string, variantId: string | null, quantity
     if (variantId) {
       const variant = await prisma.productVariant.findUnique({
         where: { id: variantId },
-        select: { id: true, productId: true, active: true, stock: true, reserved: true, label: true },
+        select: {
+          id: true,
+          productId: true,
+          active: true,
+          stock: true,
+          reserved: true,
+          label: true,
+          product: { select: { preorder: true } },
+        },
       })
       if (!variant || variant.productId !== productId || !variant.active) {
         throw new CheckoutError("Option produit introuvable ou inactive", 404)
       }
       const available = variant.stock - variant.reserved
-      if (available < quantity) {
+      // Précommande (portée par le produit parent, pas la variante) : la
+      // réservation dépasse alors le stock réel jusqu'au réapprovisionnement.
+      if (available < quantity && !variant.product.preorder) {
         throw new CheckoutError(`Stock insuffisant (${variant.label})`, 409)
       }
       const claimed = await prisma.productVariant.updateMany({
@@ -50,13 +60,13 @@ async function reserveLine(productId: string, variantId: string | null, quantity
     } else {
       const product = await prisma.product.findUnique({
         where: { id: productId },
-        select: { id: true, active: true, stock: true, reserved: true, name: true },
+        select: { id: true, active: true, stock: true, reserved: true, name: true, preorder: true },
       })
       if (!product || !product.active) {
         throw new CheckoutError("Produit introuvable ou inactif", 404)
       }
       const available = product.stock - product.reserved
-      if (available < quantity) {
+      if (available < quantity && !product.preorder) {
         throw new CheckoutError(`Stock insuffisant (${product.name})`, 409)
       }
       const claimed = await prisma.product.updateMany({
@@ -322,6 +332,10 @@ export async function completeStoreOrderByToken(token: string) {
   })
 
   if (claimed.count === 1) {
+    // Pour un produit en précommande (Product.preorder), stock peut devenir
+    // négatif ici — attendu : la vente a été acceptée sans stock réel
+    // disponible, à régulariser manuellement au réapprovisionnement (motif
+    // "Précommande" de l'ajustement de stock admin).
     for (const item of order.items) {
       if (!item.productId) continue
       if (item.variantId) {

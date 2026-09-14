@@ -142,6 +142,7 @@ const SCHEMA_AVAILABILITY: Record<string, string> = {
   in_stock: "https://schema.org/InStock",
   low_stock: "https://schema.org/LimitedAvailability",
   out_of_stock: "https://schema.org/OutOfStock",
+  preorder: "https://schema.org/PreOrder",
 }
 
 export function ProductJsonLd({
@@ -161,7 +162,7 @@ export function ProductJsonLd({
   price: number
   priceIsRange: boolean
   images: string[]
-  availability: "in_stock" | "low_stock" | "out_of_stock"
+  availability: "in_stock" | "low_stock" | "out_of_stock" | "preorder"
 }) {
   const data = {
     "@context": "https://schema.org",

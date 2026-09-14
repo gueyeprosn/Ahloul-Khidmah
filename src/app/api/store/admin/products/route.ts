@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       lowStockThreshold: data.lowStockThreshold,
       limitedEdition: data.limitedEdition ?? false,
       limitedTotal: data.limitedTotal ?? null,
+      preorder: data.preorder ?? false,
       active: data.active ?? true,
       featured: data.featured ?? false,
       isNew: data.isNew ?? false,

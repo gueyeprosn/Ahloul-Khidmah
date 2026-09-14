@@ -75,7 +75,7 @@ export default async function AdminProduitsPage() {
                   const totalAvailable = hasVariants
                     ? p.variants.reduce((s, v) => s + availableStock(v), 0)
                     : availableStock(p)
-                  const availability = availabilityStatus(totalAvailable, p.lowStockThreshold)
+                  const availability = availabilityStatus(totalAvailable, p.lowStockThreshold, p.preorder)
                   return (
                     <Tr key={p.id}>
                       <Td>
@@ -93,6 +93,9 @@ export default async function AdminProduitsPage() {
                         )}
                         {availability === "low_stock" && (
                           <StatusBadge label="Faible" variant="warning" className="ml-2" />
+                        )}
+                        {availability === "preorder" && (
+                          <StatusBadge label="Précommande" variant="info" className="ml-2" />
                         )}
                       </Td>
                       <Td>

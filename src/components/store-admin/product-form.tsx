@@ -22,6 +22,7 @@ export type ProductFormValues = {
   lowStockThreshold: number
   limitedEdition: boolean
   limitedTotal: number | null
+  preorder: boolean
   active: boolean
   featured: boolean
   isNew: boolean
@@ -39,6 +40,7 @@ const EMPTY: ProductFormValues = {
   lowStockThreshold: 5,
   limitedEdition: false,
   limitedTotal: null,
+  preorder: false,
   active: true,
   featured: false,
   isNew: false,
@@ -187,6 +189,13 @@ export function ProductForm({
             onCheckedChange={(v) => set("limitedEdition", Boolean(v))}
           />
           Édition limitée
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={values.preorder}
+            onCheckedChange={(v) => set("preorder", Boolean(v))}
+          />
+          Précommande (reste commandable à stock épuisé)
         </label>
       </div>
 

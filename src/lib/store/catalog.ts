@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 
-export type ProductAvailability = "in_stock" | "low_stock" | "out_of_stock"
+export type ProductAvailability = "in_stock" | "low_stock" | "out_of_stock" | "preorder"
 
 type StockLike = {
   stock: number
@@ -14,11 +14,16 @@ export function availableStock(item: StockLike): number {
   return Math.max(item.stock - item.reserved, 0)
 }
 
+/**
+ * `preorderEnabled` vient de Product.preorder — reste commandable même à
+ * stock épuisé, affiché "Précommande" au lieu de "Rupture de stock".
+ */
 export function availabilityStatus(
   totalAvailable: number,
-  lowStockThreshold: number
+  lowStockThreshold: number,
+  preorderEnabled = false
 ): ProductAvailability {
-  if (totalAvailable <= 0) return "out_of_stock"
+  if (totalAvailable <= 0) return preorderEnabled ? "preorder" : "out_of_stock"
   if (totalAvailable <= lowStockThreshold) return "low_stock"
   return "in_stock"
 }
@@ -56,7 +61,7 @@ export function summarizeProduct(
     minPrice,
     maxPrice,
     priceIsRange: hasVariants && minPrice !== maxPrice,
-    availability: availabilityStatus(totalAvailable, product.lowStockThreshold),
+    availability: availabilityStatus(totalAvailable, product.lowStockThreshold, product.preorder),
     totalAvailable,
     coverImage: product.images[0] ?? null,
   }

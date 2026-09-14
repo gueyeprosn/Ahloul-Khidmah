@@ -68,6 +68,7 @@ export async function GET(request: Request) {
           availability: summary.availability,
           limitedEdition: p.limitedEdition,
           limitedTotal: p.limitedTotal,
+          preorder: p.preorder,
           isNew: p.isNew,
           featured: p.featured,
         }

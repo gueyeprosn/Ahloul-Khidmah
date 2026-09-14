@@ -35,6 +35,7 @@ export async function GET(_request: Request, { params }: Params) {
         availability: summary.availability,
         limitedEdition: product.limitedEdition,
         limitedTotal: product.limitedTotal,
+        preorder: product.preorder,
         isNew: product.isNew,
         variants: product.variants.map((v) => {
           const stock = availableStock(v)
@@ -43,7 +44,7 @@ export async function GET(_request: Request, { params }: Params) {
             label: v.label,
             attributes: JSON.parse(v.attributes) as Record<string, string>,
             price: v.priceOverride ?? product.price,
-            availability: availabilityStatus(stock, product.lowStockThreshold),
+            availability: availabilityStatus(stock, product.lowStockThreshold, product.preorder),
           }
         }),
       },

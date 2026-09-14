@@ -27,6 +27,12 @@ describe("availabilityStatus", () => {
   it("en stock au-dessus du seuil", () => {
     expect(availabilityStatus(10, 5)).toBe("in_stock")
   })
+  it("précommande au lieu de rupture quand le produit est en mode précommande", () => {
+    expect(availabilityStatus(0, 5, true)).toBe("preorder")
+  })
+  it("reste en rupture (pas précommande) si du stock existe encore, même en mode précommande", () => {
+    expect(availabilityStatus(10, 5, true)).toBe("in_stock")
+  })
 })
 
 describe("catalogue (avec base de test)", () => {
@@ -63,6 +69,19 @@ describe("catalogue (avec base de test)", () => {
     // 2 (variante S) + 0 (variante L) = 2 disponibles, sous le seuil 5 → low_stock
     expect(summary.totalAvailable).toBe(2)
     expect(summary.availability).toBe("low_stock")
+  })
+
+  it("summarizeProduct affiche 'preorder' pour un produit épuisé marqué précommande", async () => {
+    const product = await createTestProduct({ stock: 0, preorder: true })
+    const full = await prisma.product.findUniqueOrThrow({
+      where: { id: product.id },
+      include: {
+        category: { select: { slug: true, name: true } },
+        images: true,
+        variants: { where: { active: true } },
+      },
+    })
+    expect(summarizeProduct(full).availability).toBe("preorder")
   })
 
   it("un produit inactif n'apparaît jamais dans le catalogue public", async () => {

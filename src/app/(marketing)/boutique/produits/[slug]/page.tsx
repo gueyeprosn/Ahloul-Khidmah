@@ -41,6 +41,7 @@ const AVAILABILITY_LABEL: Record<string, { label: string; className: string }> =
   in_stock: { label: "En stock", className: "bg-emerald-100 text-emerald-800" },
   low_stock: { label: "Stock faible", className: "bg-amber-100 text-amber-800" },
   out_of_stock: { label: "Rupture de stock", className: "bg-red-100 text-red-800" },
+  preorder: { label: "Précommande", className: "bg-blue-100 text-blue-800" },
 }
 
 export default async function ProduitPage({ params }: Params) {
@@ -153,7 +154,7 @@ export default async function ProduitPage({ params }: Params) {
                 id: v.id,
                 label: v.label,
                 price: v.priceOverride ?? product.price,
-                availability: availabilityStatus(availableStock(v), product.lowStockThreshold),
+                availability: availabilityStatus(availableStock(v), product.lowStockThreshold, product.preorder),
               }))}
             />
 

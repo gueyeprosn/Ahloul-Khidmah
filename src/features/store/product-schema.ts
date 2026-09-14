@@ -25,6 +25,7 @@ export const productSchema = z.object({
   lowStockThreshold: z.coerce.number().int().min(0),
   limitedEdition: z.boolean().optional(),
   limitedTotal: z.coerce.number().int().min(0).nullable().optional(),
+  preorder: z.boolean().optional(),
   active: z.boolean().optional(),
   featured: z.boolean().optional(),
   isNew: z.boolean().optional(),

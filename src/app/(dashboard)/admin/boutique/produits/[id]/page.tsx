@@ -51,6 +51,7 @@ export default async function ProduitDetailPage({ params }: Params) {
             lowStockThreshold: product.lowStockThreshold,
             limitedEdition: product.limitedEdition,
             limitedTotal: product.limitedTotal,
+            preorder: product.preorder,
             active: product.active,
             featured: product.featured,
             isNew: product.isNew,

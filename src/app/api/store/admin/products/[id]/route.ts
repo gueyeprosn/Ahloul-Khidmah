@@ -72,6 +72,7 @@ export async function PATCH(request: Request, { params }: Params) {
       ...(data.lowStockThreshold !== undefined && { lowStockThreshold: data.lowStockThreshold }),
       ...(data.limitedEdition !== undefined && { limitedEdition: data.limitedEdition }),
       ...(data.limitedTotal !== undefined && { limitedTotal: data.limitedTotal }),
+      ...(data.preorder !== undefined && { preorder: data.preorder }),
       ...(data.active !== undefined && { active: data.active }),
       ...(data.featured !== undefined && { featured: data.featured }),
       ...(data.isNew !== undefined && { isNew: data.isNew }),

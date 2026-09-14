@@ -59,6 +59,9 @@ export function StoreProductCard({ product }: { product: StoreProductCardData })
           {product.limitedEdition && (
             <Badge variant="secondary">Édition limitée</Badge>
           )}
+          {product.availability === "preorder" && (
+            <Badge className="bg-blue-600 text-white">Précommande</Badge>
+          )}
         </div>
         {outOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40">

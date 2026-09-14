@@ -267,6 +267,13 @@ model Product {
   lowStockThreshold Int                    @default(5)
   limitedEdition    Boolean                @default(false)
   limitedTotal      Int?
+  /// Reste commandable même à stock (réellement vendable) épuisé — affiché
+  /// "Précommande" au lieu de "Rupture de stock" ; s'applique aussi à
+  /// toutes les variantes du produit (voir lib/store/checkout.ts). Le
+  /// stock peut devenir négatif après paiement d'une précommande : c'est
+  /// attendu, à régulariser au réapprovisionnement (motif "Précommande" de
+  /// l'ajustement de stock, déjà existant).
+  preorder          Boolean                @default(false)
   active            Boolean                @default(true)
   featured          Boolean                @default(false)
   isNew             Boolean                @default(false)

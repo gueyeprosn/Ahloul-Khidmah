@@ -10,7 +10,7 @@ export type AddToCartVariant = {
   id: string
   label: string
   price: number
-  availability: "in_stock" | "low_stock" | "out_of_stock"
+  availability: "in_stock" | "low_stock" | "out_of_stock" | "preorder"
 }
 
 export function AddToCartForm({
@@ -29,7 +29,7 @@ export function AddToCartForm({
   name: string
   basePrice: number
   image: { url: string; alt: string } | null
-  availability: "in_stock" | "low_stock" | "out_of_stock"
+  availability: "in_stock" | "low_stock" | "out_of_stock" | "preorder"
   variants: AddToCartVariant[]
 }) {
   const { addItem, openDrawer } = useCart()
@@ -48,6 +48,7 @@ export function AddToCartForm({
   const needsVariantChoice = variants.length > 0
   const effectiveAvailability = selectedVariant?.availability ?? availability
   const outOfStock = effectiveAvailability === "out_of_stock"
+  const isPreorder = effectiveAvailability === "preorder"
   const canAdd = !outOfStock && (!needsVariantChoice || Boolean(selectedVariant))
 
   function handleAdd() {
@@ -91,6 +92,7 @@ export function AddToCartForm({
               >
                 {v.label} · {formatFcfa(v.price)}
                 {v.availability === "out_of_stock" && " (rupture)"}
+                {v.availability === "preorder" && " (précommande)"}
               </button>
             ))}
           </div>
@@ -125,9 +127,21 @@ export function AddToCartForm({
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--ak-emerald-deep)] px-5 py-3 text-sm font-semibold text-[var(--ak-ivory)] transition-colors hover:bg-[var(--ak-emerald-mid)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ShoppingBag className="size-4" aria-hidden />
-          {added ? "Ajouté au panier" : outOfStock ? "Rupture de stock" : "Ajouter au panier"}
+          {added
+            ? "Ajouté au panier"
+            : outOfStock
+              ? "Rupture de stock"
+              : isPreorder
+                ? "Précommander"
+                : "Ajouter au panier"}
         </button>
       </div>
+
+      {isPreorder && (
+        <p className="text-xs text-[var(--ak-ink-soft)]">
+          Ce produit est en précommande — expédition dès réapprovisionnement.
+        </p>
+      )}
     </div>
   )
 }

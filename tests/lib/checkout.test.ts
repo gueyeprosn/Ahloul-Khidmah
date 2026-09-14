@@ -75,6 +75,40 @@ describe("createStoreOrder", () => {
     expect(orders).toBe(0)
   })
 
+  it("précommande : accepte une commande même à stock épuisé, la réservation dépasse le stock réel", async () => {
+    const product = await createTestProduct({ price: 1000, stock: 0, preorder: true })
+
+    const result = await createStoreOrder({
+      items: [{ productId: product.id, variantId: null, quantity: 3 }],
+      customerName: "Cliente",
+      customerPhone: "+221771112233",
+      shippingZone: "retrait",
+    })
+
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: result.orderId } })
+    expect(order.total).toBe(3000)
+    const fresh = await prisma.product.findUniqueOrThrow({ where: { id: product.id } })
+    expect(fresh.reserved).toBe(3) // dépasse stock=0, accepté car preorder
+  })
+
+  it("précommande sur une variante : la portée est le produit parent, pas la variante elle-même", async () => {
+    const product = await createTestProduct({ price: 1000, preorder: true })
+    const variant = await prisma.productVariant.create({
+      data: { productId: product.id, label: "Unique", attributes: "{}", sku: rid("VAR"), stock: 0 },
+    })
+
+    const result = await createStoreOrder({
+      items: [{ productId: product.id, variantId: variant.id, quantity: 2 }],
+      customerName: "Cliente",
+      customerPhone: "+221771112233",
+      shippingZone: "retrait",
+    })
+
+    expect(result.orderId).toBeTruthy()
+    const freshVariant = await prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })
+    expect(freshVariant.reserved).toBe(2)
+  })
+
   it("régression : si un article échoue, la réservation des articles précédents de la même commande est relâchée", async () => {
     const ok = await createTestProduct({ name: "Disponible", price: 1000, stock: 10 })
     const short = await createTestProduct({ name: "Stock insuffisant", price: 1000, stock: 1 })
@@ -193,6 +227,31 @@ describe("completeStoreOrderByToken", () => {
     const freshOrder = await prisma.order.findUniqueOrThrow({ where: { id: order.id } })
     expect(freshOrder.paymentStatus).toBe("PAID")
     expect(freshOrder.status).toBe("PROCESSING")
+  })
+
+  it("précommande payée : le stock devient négatif sans erreur, reserved retombe à 0", async () => {
+    const product = await createTestProduct({ price: 1000, stock: 0, reserved: 3, preorder: true })
+    await prisma.order.create({
+      data: {
+        orderNumber: rid("AK-TEST"),
+        customerName: "Cliente",
+        customerPhone: "+221771112233",
+        subtotal: 3000,
+        total: 3000,
+        status: "PENDING",
+        paymentStatus: "UNPAID",
+        paymentToken: "tok-preorder-test",
+        items: { create: [{ productId: product.id, productName: product.name, sku: product.sku, unitPrice: 1000, quantity: 3, subtotal: 3000 }] },
+      },
+    })
+    vi.mocked(confirmCheckoutInvoice).mockResolvedValue({ status: "completed", raw: {} })
+
+    const result = await completeStoreOrderByToken("tok-preorder-test")
+
+    expect(result.ok).toBe(true)
+    const fresh = await prisma.product.findUniqueOrThrow({ where: { id: product.id } })
+    expect(fresh.stock).toBe(-3) // attendu — régularisé au réapprovisionnement
+    expect(fresh.reserved).toBe(0)
   })
 
   it("idempotent : deux confirmations concurrentes ne décrémentent le stock qu'une seule fois", async () => {

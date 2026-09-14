@@ -28,7 +28,7 @@ type Row = {
   reserved: number
   available: number
   threshold: number
-  availability: "in_stock" | "low_stock" | "out_of_stock"
+  availability: "in_stock" | "low_stock" | "out_of_stock" | "preorder"
 }
 
 export default async function AdminStockPage({
@@ -56,7 +56,7 @@ export default async function AdminStockPage({
         reserved: p.reserved,
         available,
         threshold: p.lowStockThreshold,
-        availability: availabilityStatus(available, p.lowStockThreshold),
+        availability: availabilityStatus(available, p.lowStockThreshold, p.preorder),
       })
     } else {
       for (const v of p.variants) {
@@ -70,7 +70,7 @@ export default async function AdminStockPage({
           reserved: v.reserved,
           available,
           threshold: p.lowStockThreshold,
-          availability: availabilityStatus(available, p.lowStockThreshold),
+          availability: availabilityStatus(available, p.lowStockThreshold, p.preorder),
         })
       }
     }
@@ -79,6 +79,7 @@ export default async function AdminStockPage({
   const filtered = rows.filter((r) => {
     if (filtre === "faible") return r.availability === "low_stock"
     if (filtre === "rupture") return r.availability === "out_of_stock"
+    if (filtre === "precommande") return r.availability === "preorder"
     return true
   })
 
@@ -93,6 +94,11 @@ export default async function AdminStockPage({
       href: "/admin/boutique/stock?filtre=rupture",
       label: `Rupture (${rows.filter((r) => r.availability === "out_of_stock").length})`,
       active: filtre === "rupture",
+    },
+    {
+      href: "/admin/boutique/stock?filtre=precommande",
+      label: `Précommande (${rows.filter((r) => r.availability === "preorder").length})`,
+      active: filtre === "precommande",
     },
   ]
 
@@ -126,6 +132,7 @@ export default async function AdminStockPage({
                       {r.availability === "out_of_stock" && <StatusBadge label="Rupture" variant="danger" />}
                       {r.availability === "low_stock" && <StatusBadge label="Faible" variant="warning" />}
                       {r.availability === "in_stock" && <StatusBadge label="OK" variant="success" />}
+                      {r.availability === "preorder" && <StatusBadge label="Précommande" variant="info" />}
                     </Td>
                     <Td>
                       <StockAdjustRow
