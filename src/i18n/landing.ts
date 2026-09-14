@@ -71,6 +71,10 @@ export type LandingDict = {
     title: string
     intro: string
   }
+  storeMention: {
+    text: string
+    cta: string
+  }
   footer: {
     community: string
     slogan: string
@@ -273,6 +277,10 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       intro:
         "Moments de service, de communauté et de rayonnement à Touba — à parcourir en diaporama.",
     },
+    storeMention: {
+      text: "Vous pouvez aussi nous soutenir en portant nos couleurs.",
+      cta: "Découvrir Barkelu",
+    },
     footer: {
       community: "La Communauté des Serviteurs",
       slogan:
@@ -470,6 +478,10 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       eyebrow: "المكتبة الإعلامية",
       title: "صور من الخدمة",
       intro: "لحظات من الخدمة والجماعة والإشعاع في طوبى — في عرض شرائح.",
+    },
+    storeMention: {
+      text: "يمكنكم أيضاً دعمنا بارتداء ألواننا.",
+      cta: "اكتشفوا Barkelu",
     },
     footer: {
       community: "جماعة الخدم",

@@ -3,6 +3,7 @@ import { LandingHero } from "@/components/landing/landing-hero"
 import { LandingJoin } from "@/components/landing/landing-join"
 import { LandingPourquoi } from "@/components/landing/landing-pourquoi"
 import { LandingMission } from "@/components/landing/landing-mission"
+import { LandingStoreMention } from "@/components/landing/landing-store-mention"
 import { LandingGalerie } from "@/components/landing/landing-galerie"
 import { LandingTemoignages } from "@/components/landing/landing-temoignages"
 import { LandingFaq } from "@/components/landing/landing-faq"
@@ -45,6 +46,7 @@ export default async function LandingPage({
       <LandingJoin defaultMontant={params.montant} isMember={isMember} />
       <LandingPourquoi />
       <LandingMission />
+      <LandingStoreMention />
       <LandingGalerie photos={photos} />
       <LandingTemoignages items={testimonials} />
       <LandingFaq />
