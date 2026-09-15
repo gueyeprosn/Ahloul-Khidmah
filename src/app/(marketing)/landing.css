@@ -59,6 +59,15 @@
   }
 }
 
+@keyframes ak-yt-widget-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes ak-logo-glow-pulse {
   0%,
   100% {
@@ -203,6 +212,12 @@
   height: 100%;
   transform-style: preserve-3d;
   animation: ak-logo-spin-y 18s linear infinite;
+}
+
+/* Bulle "vinyle" du widget vidéo flottant (réduit) — tourne pendant la
+   lecture, s'arrête (voir prefers-reduced-motion plus bas) sinon. */
+.ak-yt-vinyl {
+  animation: ak-yt-widget-spin 4s linear infinite;
 }
 
 .ak-logo-face {
@@ -617,6 +632,7 @@
   .ak-reveal,
   .ak-portrait,
   .ak-logo-spin,
+  .ak-yt-vinyl,
   .ak-logo-glow,
   .ak-logo-flare,
   .ak-hero-flare,
@@ -642,7 +658,8 @@
     animation: none;
   }
 
-  .ak-logo-spin {
+  .ak-logo-spin,
+  .ak-yt-vinyl {
     transform: none;
   }
 }

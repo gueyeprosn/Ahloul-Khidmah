@@ -8,6 +8,41 @@ import { YOUTUBE_PLAYLIST_ID, buildYoutubeEmbedUrl } from "@/lib/youtube-widget-
 
 const DISMISS_KEY = "ak_yt_dismiss"
 
+/**
+ * Petit disque façon vinyle — tourne pendant la lecture (assumée dès
+ * `activated`, YouTube ne nous donne pas l'état lecture/pause réel sans
+ * l'API JS IFrame, qu'on évite ici pour rester sur un simple `<iframe>`).
+ */
+function VinylDisc({ spinning, size = 16 }: { spinning: boolean; size?: number }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center rounded-full border-2 border-[var(--ak-gold)] bg-[var(--ak-emerald-deep)]",
+        spinning && "ak-yt-vinyl"
+      )}
+      style={{ width: size, height: size }}
+    >
+      {/* Repère excentré (asymétrique) — rend la rotation perceptible,
+          un simple anneau + point centré serait visuellement immobile. */}
+      <span
+        className="absolute rounded-full bg-[var(--ak-gold)]/70"
+        style={{
+          width: Math.round(size * 0.16),
+          height: Math.round(size * 0.16),
+          top: Math.round(size * 0.16),
+          left: "50%",
+          transform: "translateX(-50%)",
+        }}
+      />
+      <span
+        className="rounded-full bg-[var(--ak-gold)]"
+        style={{ width: Math.round(size * 0.3), height: Math.round(size * 0.3) }}
+      />
+    </span>
+  )
+}
+
 export function YoutubeWidget() {
   const { dict } = useLocale()
   const [closed, setClosed] = useState(false)
@@ -53,8 +88,11 @@ export function YoutubeWidget() {
     >
       {!collapsed && (
         <div className="flex items-center justify-between px-3 py-2">
-          <span className="truncate text-xs font-semibold text-[var(--ak-gold-light)]">
-            {dict.youtubeWidget.regionLabel}
+          <span className="flex min-w-0 items-center gap-2">
+            <VinylDisc spinning={activated} />
+            <span className="truncate text-xs font-semibold text-[var(--ak-gold-light)]">
+              {dict.youtubeWidget.regionLabel}
+            </span>
           </span>
           <div className="flex shrink-0 gap-1">
             {activated && (
@@ -113,9 +151,9 @@ export function YoutubeWidget() {
             type="button"
             aria-label={dict.youtubeWidget.expand}
             onClick={() => setCollapsed(false)}
-            className="absolute inset-0 flex items-center justify-center bg-[var(--ak-emerald-deep)]/70 text-[var(--ak-gold-light)]"
+            className="absolute inset-0 flex items-center justify-center bg-[var(--ak-emerald-deep)]/70"
           >
-            <Play className="size-5" aria-hidden />
+            <VinylDisc spinning size={40} />
           </button>
         )}
       </div>
