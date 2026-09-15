@@ -1,9 +1,14 @@
 export const YOUTUBE_PLAYLIST_ID = "PL_uSyKTZ25BRL6xJ50VzuHuN4Ha6gtLzM"
 
+export const YOUTUBE_EMBED_ORIGIN = "https://www.youtube-nocookie.com"
+
 /**
- * URL d'intégration `youtube-nocookie.com` — domaine à vie privée renforcée,
- * pas d'API IFrame Player nécessaire (juste un <iframe src="...">, ce qui
- * limite le changement de CSP au strict `frame-src`).
+ * URL d'intégration `youtube-nocookie.com` — domaine à vie privée renforcée.
+ * `enablejsapi=1` n'ajoute aucune surface CSP (pas de script externe requis,
+ * juste `postMessage` vers l'iframe) mais permet de forcer `playVideo` en
+ * secours : le seul paramètre `autoplay=1` n'est pas toujours fiable sur un
+ * embed de playlist (`/embed/videoseries`), certains navigateurs le laissent
+ * en pause malgré le geste utilisateur qui a créé l'iframe.
  */
 export function buildYoutubeEmbedUrl(
   playlistId: string,
@@ -21,6 +26,12 @@ export function buildYoutubeEmbedUrl(
     modestbranding: "1",
     rel: "0",
     loop: "1",
+    enablejsapi: "1",
   })
-  return `https://www.youtube-nocookie.com/embed/videoseries?${params.toString()}`
+  return `${YOUTUBE_EMBED_ORIGIN}/embed/videoseries?${params.toString()}`
+}
+
+/** Commande "postMessage" pour forcer la lecture — voir buildYoutubeEmbedUrl. */
+export function buildPlayCommand(): string {
+  return JSON.stringify({ event: "command", func: "playVideo", args: [] })
 }

@@ -1,10 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Play, Minus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/landing/locale-provider"
-import { YOUTUBE_PLAYLIST_ID, buildYoutubeEmbedUrl } from "@/lib/youtube-widget-config"
+import {
+  YOUTUBE_PLAYLIST_ID,
+  YOUTUBE_EMBED_ORIGIN,
+  buildYoutubeEmbedUrl,
+  buildPlayCommand,
+} from "@/lib/youtube-widget-config"
 
 const DISMISS_KEY = "ak_yt_dismiss"
 
@@ -48,6 +53,26 @@ export function YoutubeWidget() {
   const [closed, setClosed] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [activated, setActivated] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  // `autoplay=1` seul n'est pas toujours honoré sur un embed de playlist —
+  // on force la lecture par commande postMessage, avec deux relances : le
+  // lecteur YouTube ignore parfois une commande envoyée avant sa propre
+  // initialisation interne, même après l'évènement `load` de l'iframe.
+  function forcePlay() {
+    const win = iframeRef.current?.contentWindow
+    if (!win) return
+    try {
+      win.postMessage(buildPlayCommand(), YOUTUBE_EMBED_ORIGIN)
+    } catch {
+      // iframe pas encore prête — sans effet, une relance suivra
+    }
+  }
+  function handleIframeLoad() {
+    forcePlay()
+    setTimeout(forcePlay, 700)
+    setTimeout(forcePlay, 1800)
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -126,10 +151,12 @@ export function YoutubeWidget() {
         {activated && (
           <iframe
             key="yt-widget-player"
+            ref={iframeRef}
             src={buildYoutubeEmbedUrl(YOUTUBE_PLAYLIST_ID, { autoplay: true, muted: false })}
             className="size-full border-0"
             allow="autoplay; encrypted-media; picture-in-picture"
             title={dict.youtubeWidget.regionLabel}
+            onLoad={handleIframeLoad}
           />
         )}
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildYoutubeEmbedUrl } from "@/lib/youtube-widget-config"
+import { buildYoutubeEmbedUrl, buildPlayCommand } from "@/lib/youtube-widget-config"
 
 describe("buildYoutubeEmbedUrl", () => {
   it("pointe vers le domaine privacy-enhanced youtube-nocookie.com", () => {
@@ -30,5 +30,17 @@ describe("buildYoutubeEmbedUrl", () => {
 
   it("produit une URL valide même avec l'id placeholder", () => {
     expect(() => new URL(buildYoutubeEmbedUrl("REPLACE_ME_PLAYLIST_ID", { autoplay: true, muted: false }))).not.toThrow()
+  })
+
+  it("active enablejsapi (nécessaire pour forcer playVideo en secours de l'autoplay)", () => {
+    const url = new URL(buildYoutubeEmbedUrl("PL123", { autoplay: true, muted: false }))
+    expect(url.searchParams.get("enablejsapi")).toBe("1")
+  })
+})
+
+describe("buildPlayCommand", () => {
+  it("produit une commande postMessage playVideo valide", () => {
+    const command = JSON.parse(buildPlayCommand())
+    expect(command).toEqual({ event: "command", func: "playVideo", args: [] })
   })
 })

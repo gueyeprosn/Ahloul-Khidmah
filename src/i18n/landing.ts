@@ -307,7 +307,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       address: "Touba, Sénégal",
     },
     youtubeWidget: {
-      regionLabel: "Lecteur vidéo Ahloul Khidmah",
+      regionLabel: "AHLOUL KHIDMAH TV",
       activateSound: "Activer le son",
       minimize: "Réduire",
       expand: "Agrandir",
@@ -515,7 +515,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
       address: "طوبى، السنغال",
     },
     youtubeWidget: {
-      regionLabel: "مشغل فيديو أهل الخدمة",
+      regionLabel: "AHLOUL KHIDMAH TV",
       activateSound: "تفعيل الصوت",
       minimize: "تصغير",
       expand: "تكبير",
