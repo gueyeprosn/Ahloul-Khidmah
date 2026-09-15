@@ -92,6 +92,13 @@ export type LandingDict = {
   contact: {
     address: string
   }
+  youtubeWidget: {
+    regionLabel: string
+    activateSound: string
+    minimize: string
+    expand: string
+    close: string
+  }
 }
 
 export const dictionaries: Record<Locale, LandingDict> = {
@@ -299,6 +306,13 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
     contact: {
       address: "Touba, Sénégal",
     },
+    youtubeWidget: {
+      regionLabel: "Lecteur vidéo Ahloul Khidmah",
+      activateSound: "Activer le son",
+      minimize: "Réduire",
+      expand: "Agrandir",
+      close: "Fermer",
+    },
   },
   ar: {
     nav: {
@@ -499,6 +513,13 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
     },
     contact: {
       address: "طوبى، السنغال",
+    },
+    youtubeWidget: {
+      regionLabel: "مشغل فيديو أهل الخدمة",
+      activateSound: "تفعيل الصوت",
+      minimize: "تصغير",
+      expand: "تكبير",
+      close: "إغلاق",
     },
   },
 }

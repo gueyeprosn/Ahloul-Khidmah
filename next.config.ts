@@ -20,6 +20,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://app.paydunya.com https://paydunya.com",
       "font-src 'self' data:",
+      "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
       "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.googletagmanager.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",

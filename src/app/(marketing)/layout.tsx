@@ -7,6 +7,7 @@ import { LocaleProvider } from "@/components/landing/locale-provider"
 import { CartProvider } from "@/components/store/cart-provider"
 import { StoreCartDrawer } from "@/components/store/store-cart-drawer"
 import { StoreSearchPalette } from "@/components/store/store-search-palette"
+import { YoutubeWidget } from "@/components/landing/youtube-widget"
 import { MarketingJsonLd } from "@/components/seo/json-ld"
 import { LOCALE_COOKIE, type Locale } from "@/i18n/landing"
 import { buildMetadata } from "@/lib/seo"
@@ -64,6 +65,7 @@ export default async function MarketingLayout({
         </div>
         <StoreCartDrawer />
         <StoreSearchPalette />
+        <YoutubeWidget />
       </CartProvider>
     </LocaleProvider>
   )
