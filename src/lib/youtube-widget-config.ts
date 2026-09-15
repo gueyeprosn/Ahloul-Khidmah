@@ -1,6 +1,4 @@
-// TODO: coller l'ID réel de la playlist ici (valeur du paramètre `list=`
-// dans l'URL de la playlist YouTube).
-export const YOUTUBE_PLAYLIST_ID = "REPLACE_ME_PLAYLIST_ID"
+export const YOUTUBE_PLAYLIST_ID = "PL_uSyKTZ25BRL6xJ50VzuHuN4Ha6gtLzM"
 
 /**
  * URL d'intégration `youtube-nocookie.com` — domaine à vie privée renforcée,
