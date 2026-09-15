@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { FaqJsonLd } from "@/components/seo/json-ld"
+import { FaqJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { SeoPageShell } from "@/components/seo/seo-page-shell"
 import { dictionaries } from "@/i18n/landing"
 import { buildMetadata } from "@/lib/seo"
@@ -24,6 +24,12 @@ export default function FaqPage() {
   return (
     <>
       <FaqJsonLd />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Accueil", path: "/" },
+          { name: "FAQ", path: "/faq" },
+        ]}
+      />
       <SeoPageShell
         eyebrow={t.eyebrow}
         title={t.title}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { QuiSommesNousContent } from "@/components/landing/qui-sommes-nous-content"
+import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { buildMetadata } from "@/lib/seo"
 
 export const metadata: Metadata = buildMetadata({
@@ -23,5 +24,15 @@ export const metadata: Metadata = buildMetadata({
 })
 
 export default function QuiSommesNousPage() {
-  return <QuiSommesNousContent />
+  return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Accueil", path: "/" },
+          { name: "Qui sommes-nous", path: "/qui-sommes-nous" },
+        ]}
+      />
+      <QuiSommesNousContent />
+    </>
+  )
 }

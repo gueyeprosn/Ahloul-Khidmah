@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { SeoPageShell } from "@/components/seo/seo-page-shell"
+import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { dictionaries } from "@/i18n/landing"
 import { buildMetadata } from "@/lib/seo"
 
@@ -22,12 +23,19 @@ export const metadata: Metadata = buildMetadata({
 
 export default function MissionPage() {
   return (
-    <SeoPageShell
-      eyebrow={t.eyebrow}
-      title={t.title}
-      intro={t.intro}
-      path="/mission"
-    >
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Accueil", path: "/" },
+          { name: "Mission", path: "/mission" },
+        ]}
+      />
+      <SeoPageShell
+        eyebrow={t.eyebrow}
+        title={t.title}
+        intro={t.intro}
+        path="/mission"
+      >
       <p className="text-base leading-relaxed text-[var(--ak-ink-soft)]">
         Ahloul Khidmah structure les forces de la Mouridiyah sous les
         orientations du Khalife général des Mourides. Notre objectif : transformer
@@ -55,6 +63,7 @@ export default function MissionPage() {
           </li>
         ))}
       </ol>
-    </SeoPageShell>
+      </SeoPageShell>
+    </>
   )
 }

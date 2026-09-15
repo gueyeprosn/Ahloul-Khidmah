@@ -154,6 +154,7 @@ export function ProductJsonLd({
   priceIsRange,
   images,
   availability,
+  reviewStats,
 }: {
   name: string
   description: string
@@ -163,7 +164,10 @@ export function ProductJsonLd({
   priceIsRange: boolean
   images: string[]
   availability: "in_stock" | "low_stock" | "out_of_stock" | "preorder"
+  /** Étoiles (rich snippet Google) — omis si aucun avis approuvé. */
+  reviewStats?: { average: number; count: number }
 }) {
+  const hasReviews = Boolean(reviewStats && reviewStats.count > 0)
   const data = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -173,6 +177,15 @@ export function ProductJsonLd({
     image: images.map((src) => absoluteUrl(src)),
     url: absoluteUrl(`/boutique/produits/${slug}`),
     brand: { "@type": "Brand", name: SITE_NAME },
+    ...(hasReviews && reviewStats
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviewStats.average,
+            reviewCount: reviewStats.count,
+          },
+        }
+      : {}),
     offers: {
       "@type": "Offer",
       url: absoluteUrl(`/boutique/produits/${slug}`),

@@ -78,6 +78,7 @@ export default async function ProduitPage({ params }: Params) {
         priceIsRange={summary.priceIsRange}
         images={product.images.map((img) => img.url)}
         availability={summary.availability}
+        reviewStats={reviewStats}
       />
 
       <section className="mx-auto max-w-6xl px-5 pt-28 pb-16 md:px-8 md:pt-36">
