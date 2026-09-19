@@ -1,5 +1,8 @@
 import type { NextConfig } from "next"
 
+// Content-Security-Policy déplacée dans middleware.ts : elle a besoin d'un
+// nonce généré par requête (impossible dans ces en-têtes statiques), voir
+// lib/csp.ts (audit sécurité 2026, V-03).
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -11,22 +14,6 @@ const securityHeaders = [
   {
     key: "X-DNS-Prefetch-Control",
     value: "on",
-  },
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://app.paydunya.com https://paydunya.com",
-      "font-src 'self' data:",
-      "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
-      "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.googletagmanager.com",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self' https://pay.wave.com https://app.paydunya.com https://orangemoneysn.page.link https://sugu.orange-sonatel.com",
-      "object-src 'none'",
-    ].join("; "),
   },
 ]
 

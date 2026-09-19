@@ -30,7 +30,6 @@ export function QuiSommesNousContent() {
       eyebrow={t.eyebrow}
       title={t.title}
       intro={t.intro}
-      path="/qui-sommes-nous"
       ctaLabel={t.cta}
       ctaOr={t.ctaOr}
       ctaContributeLabel={t.ctaContribute}

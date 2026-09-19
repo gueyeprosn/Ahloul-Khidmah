@@ -33,7 +33,6 @@ export default function VisionPage() {
         eyebrow={t.eyebrow}
         title={t.title}
         intro={t.summary}
-        path="/vision"
       >
         <div className="space-y-6 text-base leading-relaxed text-[var(--ak-ink-soft)] whitespace-pre-line">
           {t.full.replace("Ahloul Khidma", "Ahloul Khidmah")}

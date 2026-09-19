@@ -1,11 +1,9 @@
 import Link from "next/link"
-import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 
 type SeoPageShellProps = {
   eyebrow: string
   title: string
   intro: string
-  path: string
   children: React.ReactNode
   ctaHref?: string
   ctaLabel?: string
@@ -14,11 +12,15 @@ type SeoPageShellProps = {
   homeLabel?: string
 }
 
+// Le fil d'Ariane structuré (BreadcrumbJsonLd) est rendu par chaque page
+// appelante, pas ici : ce composant est aussi utilisé depuis un Client
+// Component (QuiSommesNousContent), et BreadcrumbJsonLd lit le nonce CSP
+// via next/headers (Server-only) — le rendre ici romprait le build pour
+// tout appelant client (audit sécurité 2026, migration CSP par nonce).
 export function SeoPageShell({
   eyebrow,
   title,
   intro,
-  path,
   children,
   ctaHref = "/adhesion",
   ctaLabel = "Adhérer maintenant",
@@ -28,12 +30,6 @@ export function SeoPageShell({
 }: SeoPageShellProps) {
   return (
     <>
-      <BreadcrumbJsonLd
-        items={[
-          { name: homeLabel, path: "/" },
-          { name: title, path },
-        ]}
-      />
       <article className="relative">
         <div className="relative overflow-hidden bg-[var(--ak-emerald-deep)] px-5 pt-28 pb-16 md:px-8 md:pt-36 md:pb-20">
           <div

@@ -1,5 +1,7 @@
+import { headers } from "next/headers"
 import { contact } from "@/content/landing"
 import { dictionaries } from "@/i18n/landing"
+import { CSP_NONCE_HEADER } from "@/lib/csp"
 import {
   SITE_NAME,
   SITE_TAGLINE,
@@ -8,14 +10,16 @@ import {
   absoluteUrl,
 } from "@/lib/seo"
 
-function JsonLdScript({ data }: { data: Record<string, unknown> }) {
+async function JsonLdScript({ data }: { data: Record<string, unknown> }) {
   // Échappe "<" : JSON.stringify ne le fait pas, et un champ contenant
   // littéralement "</script>" (ex. nom de produit) romprait sinon la balise
-  // et permettrait d'injecter du HTML/JS (la CSP autorise 'unsafe-inline').
+  // et permettrait d'injecter du HTML/JS.
   const json = JSON.stringify(data).replace(/</g, "\\u003c")
+  const nonce = (await headers()).get(CSP_NONCE_HEADER) || undefined
   return (
     <script
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{ __html: json }}
     />
   )

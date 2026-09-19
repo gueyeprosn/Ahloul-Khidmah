@@ -34,7 +34,6 @@ export default function FaqPage() {
         eyebrow={t.eyebrow}
         title={t.title}
         intro="Tout ce qu'il faut savoir pour rejoindre Ahloul Khidmah ou soutenir la communauté par une contribution."
-        path="/faq"
       >
         <dl className="space-y-8">
           {t.items.map((item) => (

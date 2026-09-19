@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { SeoPageShell } from "@/components/seo/seo-page-shell"
+import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { contact } from "@/content/landing"
 import { buildMetadata } from "@/lib/seo"
 
@@ -12,13 +13,19 @@ export const metadata: Metadata = buildMetadata({
 
 export default function MentionsLegalesPage() {
   return (
-    <SeoPageShell
-      eyebrow="Informations légales"
-      title="Mentions légales"
-      intro="Informations relatives à l'éditeur et à l'hébergement du site www.ahloulkhidmah.org."
-      path="/mentions-legales"
-      ctaLabel="Retour à l'adhésion"
-    >
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Accueil", path: "/" },
+          { name: "Mentions légales", path: "/mentions-legales" },
+        ]}
+      />
+      <SeoPageShell
+        eyebrow="Informations légales"
+        title="Mentions légales"
+        intro="Informations relatives à l'éditeur et à l'hébergement du site www.ahloulkhidmah.org."
+        ctaLabel="Retour à l'adhésion"
+      >
       <div className="space-y-8 text-sm leading-relaxed text-[var(--ak-ink-soft)] md:text-base">
         <section>
           <h2 className="font-[family-name:var(--font-amiri)] text-2xl text-[var(--ak-emerald-deep)]">
@@ -79,6 +86,7 @@ export default function MentionsLegalesPage() {
           </p>
         </section>
       </div>
-    </SeoPageShell>
+      </SeoPageShell>
+    </>
   )
 }

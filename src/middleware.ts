@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server"
 import { jwtVerify } from "jose"
 import { AUTH_COOKIE, safeInternalPath } from "@/lib/auth-shared"
 import { STORE_PUBLIC_ENABLED } from "@/lib/store/store-status"
+import { buildCsp, CSP_NONCE_HEADER } from "@/lib/csp"
 
 const protectedPrefixes = [
   "/dashboard",
@@ -123,7 +124,15 @@ async function verifyToken(token: string) {
   return payload
 }
 
-export async function middleware(request: NextRequest) {
+/**
+ * Logique d'authentification/autorisation d'origine — inchangée, seulement
+ * renommée et augmentée d'un paramètre `requestHeaders` (nonce CSP à
+ * propager sur les réponses `NextResponse.next()`, voir `middleware` plus
+ * bas qui l'enveloppe). Toute la logique de routage/redirection reste ici,
+ * intacte, pour ne pas risquer de régression sur cette frontière de
+ * sécurité en la mélangeant avec le calcul de la CSP.
+ */
+async function authMiddleware(request: NextRequest, requestHeaders: Headers) {
   const { pathname } = request.nextUrl
   const method = request.method
 
@@ -147,7 +156,7 @@ export async function middleware(request: NextRequest) {
   // --- API protection ---
   if (isApi(pathname)) {
     if (isPublicApi(pathname, method)) {
-      return NextResponse.next()
+      return NextResponse.next({ request: { headers: requestHeaders } })
     }
 
     const token = request.cookies.get(AUTH_COOKIE)?.value
@@ -156,7 +165,7 @@ export async function middleware(request: NextRequest) {
     }
     try {
       await verifyToken(token)
-      return NextResponse.next()
+      return NextResponse.next({ request: { headers: requestHeaders } })
     } catch {
       const res = NextResponse.json({ error: "Non autorisé" }, { status: 401 })
       res.cookies.delete(AUTH_COOKIE)
@@ -174,7 +183,7 @@ export async function middleware(request: NextRequest) {
   // une boucle de redirection infinie /login <-> /dashboard. Laisser /login
   // toujours s'afficher normalement élimine cette boucle.
   if (pathname === "/login") {
-    return NextResponse.next()
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // /admin seul → dashboard (évite 404 après login?next=/admin)
@@ -189,7 +198,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!isProtectedPage(pathname)) {
-    return NextResponse.next()
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   const token = request.cookies.get(AUTH_COOKIE)?.value
@@ -201,7 +210,7 @@ export async function middleware(request: NextRequest) {
 
   try {
     await verifyToken(token)
-    return NextResponse.next()
+    return NextResponse.next({ request: { headers: requestHeaders } })
   } catch {
     const login = new URL("/login", request.url)
     login.searchParams.set("next", safeInternalPath(pathname))
@@ -211,23 +220,29 @@ export async function middleware(request: NextRequest) {
   }
 }
 
+/**
+ * Point d'entrée réel du middleware — génère un nonce par requête (CSP
+ * script-src, voir lib/csp.ts, audit sécurité 2026 V-03), le propage aux
+ * Server Components via l'en-tête de requête `x-nonce`, délègue tout le
+ * routage/auth à authMiddleware ci-dessus sans y toucher, puis pose la CSP
+ * sur la réponse quelle qu'elle soit (redirection, JSON 401, ou passage).
+ */
+export async function middleware(request: NextRequest) {
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set(CSP_NONCE_HEADER, nonce)
+
+  const response = await authMiddleware(request, requestHeaders)
+  response.headers.set("Content-Security-Policy", buildCsp(nonce))
+  return response
+}
+
 export const config = {
   matcher: [
-    "/login",
-    "/dashboard/:path*",
-    "/adherents/:path*",
-    "/cotisations/:path*",
-    "/contributions/:path*",
-    "/cellules/:path*",
-    "/competences/:path*",
-    "/rapports/:path*",
-    "/parametres/:path*",
-    "/medias/:path*",
-    "/temoignages/:path*",
-    "/journal/:path*",
-    "/admin/:path*",
-    "/boutique",
-    "/boutique/:path*",
-    "/api/:path*",
+    // Tout sauf les assets statiques Next (déjà immuables/hashés, aucune
+    // CSP à leur poser) — inclut désormais aussi les pages marketing, qui
+    // n'étaient pas couvertes par l'ancien matcher ciblé et recevaient leur
+    // CSP uniquement via next.config.ts (statique, sans nonce possible).
+    "/((?!_next/static|_next/image|favicon\\.ico).*)",
   ],
 }

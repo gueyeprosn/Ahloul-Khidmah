@@ -34,7 +34,6 @@ export default function MissionPage() {
         eyebrow={t.eyebrow}
         title={t.title}
         intro={t.intro}
-        path="/mission"
       >
       <p className="text-base leading-relaxed text-[var(--ak-ink-soft)]">
         Ahloul Khidmah structure les forces de la Mouridiyah sous les

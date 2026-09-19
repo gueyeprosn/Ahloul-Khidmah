@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { SeoPageShell } from "@/components/seo/seo-page-shell"
+import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { contact } from "@/content/landing"
 import { buildMetadata } from "@/lib/seo"
 
@@ -12,13 +13,19 @@ export const metadata: Metadata = buildMetadata({
 
 export default function ConfidentialitePage() {
   return (
-    <SeoPageShell
-      eyebrow="Vie privée"
-      title="Politique de confidentialité"
-      intro="Comment Ahloul Khidmah collecte, utilise et protège vos données personnelles."
-      path="/confidentialite"
-      ctaLabel="Retour à l'adhésion"
-    >
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Accueil", path: "/" },
+          { name: "Politique de confidentialité", path: "/confidentialite" },
+        ]}
+      />
+      <SeoPageShell
+        eyebrow="Vie privée"
+        title="Politique de confidentialité"
+        intro="Comment Ahloul Khidmah collecte, utilise et protège vos données personnelles."
+        ctaLabel="Retour à l'adhésion"
+      >
       <div className="space-y-8 text-sm leading-relaxed text-[var(--ak-ink-soft)] md:text-base">
         <section>
           <h2 className="font-[family-name:var(--font-amiri)] text-2xl text-[var(--ak-emerald-deep)]">
@@ -101,6 +108,7 @@ export default function ConfidentialitePage() {
           </p>
         </section>
       </div>
-    </SeoPageShell>
+      </SeoPageShell>
+    </>
   )
 }

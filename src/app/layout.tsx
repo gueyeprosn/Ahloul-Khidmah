@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import Script from "next/script"
+import { headers } from "next/headers"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { PwaRegister } from "@/components/pwa-register"
 import { ChunkErrorReload } from "@/components/chunk-error-reload"
 import { DEFAULT_DESCRIPTION, DEFAULT_KEYWORDS, SITE_URL } from "@/lib/seo"
+import { CSP_NONCE_HEADER } from "@/lib/csp"
 import "./globals.css"
 
 const GA_MEASUREMENT_ID = "G-893MDER118"
@@ -78,11 +80,12 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const nonce = (await headers()).get(CSP_NONCE_HEADER) || undefined
   return (
     <html
       lang="fr"
@@ -93,8 +96,9 @@ export default function RootLayout({
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
+          nonce={nonce}
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
