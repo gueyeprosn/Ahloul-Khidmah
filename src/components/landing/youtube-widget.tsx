@@ -101,13 +101,13 @@ export function YoutubeWidget() {
       role="complementary"
       aria-label={dict.youtubeWidget.regionLabel}
       className={cn(
-        // Position fixe à l'écran (coin bas-gauche), volontairement physique
-        // et non logique (`start-4`) : un widget flottant se repère à un
-        // coin d'écran, pas au sens de lecture — reste bas-gauche même en
+        // Position fixe à l'écran (coin bas-droit), volontairement physique
+        // et non logique (`end-4`) : un widget flottant se repère à un
+        // coin d'écran, pas au sens de lecture — reste bas-droit même en
         // arabe (dir="rtl"). z-40, sous les z-50/z-[80]/z-[100] existants
         // (tiroir panier, palette de recherche, bannière d'installation) :
         // tout modal déjà présent recouvre naturellement le widget.
-        "fixed bottom-4 left-4 z-40 overflow-hidden rounded-2xl border border-[var(--ak-gold)]/40 bg-[var(--ak-emerald-deep)] shadow-[0_16px_40px_rgba(0,0,0,0.35)] transition-[width,height] duration-300",
+        "fixed right-4 bottom-4 z-40 overflow-hidden rounded-2xl border border-[var(--ak-gold)]/40 bg-[var(--ak-emerald-deep)] shadow-[0_16px_40px_rgba(0,0,0,0.35)] transition-[width,height] duration-300",
         collapsed ? "size-14 rounded-full" : "w-[320px] max-w-[calc(100vw-2rem)]"
       )}
     >

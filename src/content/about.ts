@@ -120,7 +120,7 @@ export const aboutByLocale: Record<Locale, AboutDict> = {
     },
     cheikh: {
       name: "Cheikh Ahmadou Bamba",
-      role: "Serigne Touba",
+      role: "Fondateur du Mouridisme",
     },
     pillarsTitle: "Nos quatre piliers",
     pillars: [
@@ -275,7 +275,7 @@ export const aboutByLocale: Record<Locale, AboutDict> = {
     },
     cheikh: {
       name: "الشيخ أحمدو بمبا",
-      role: "سرين طوبى",
+      role: "مؤسس المريدية",
     },
     pillarsTitle: "أركاننا الأربعة",
     pillars: [
