@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db"
 import { orderStatusUpdateSchema } from "@/features/store/product-schema"
 import { canTransition } from "@/features/store/order-status"
 import { notifyOrderStatusChange } from "@/lib/store/notifications"
+import { releaseCouponClaimForOrder } from "@/lib/store/coupon-claims"
 import { logAudit } from "@/lib/audit-log"
 
 type Params = { params: Promise<{ id: string }> }
@@ -67,6 +68,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (nextStatus === "CANCELLED") {
     // La commande n'a jamais été payée (seule transition possible depuis
     // PENDING) : le stock n'a été que réservé, jamais réellement décrémenté.
+    await releaseCouponClaimForOrder(order)
     for (const item of order.items) {
       if (!item.productId) continue
       if (item.variantId) {

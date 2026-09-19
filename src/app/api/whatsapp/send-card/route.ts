@@ -54,6 +54,7 @@ export async function POST(request: Request) {
       celluleLocale: true,
       memberNumber: true,
       photoUrl: true,
+      pinHash: true,
     },
   })
   if (!adherent) {
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
     validationUrl,
     memberNumber: adherent.memberNumber,
     photoUrl: adherent.photoUrl,
+    hasPin: Boolean(adherent.pinHash),
   }
   const caption = memberCardCaption(badgeData)
   const waMe = buildMemberCardWaMeUrl(badgeData)

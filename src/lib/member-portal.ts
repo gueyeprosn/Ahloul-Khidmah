@@ -99,16 +99,20 @@ export async function findAdherentByTelAndCode(tel: string, codeRaw: string) {
 
   if (phoneMatches.length === 0) return null
 
+  // Dès qu'un membre a défini un PIN personnel, le suffixe d'ID (non
+  // secret — envoyé en clair par WhatsApp/email, voir memberAccessLines)
+  // cesse d'être une méthode d'accès valide : sinon un PIN "fort" resterait
+  // contournable indéfiniment par la même porte faible (audit sécurité 2026).
   const accepted: typeof phoneMatches = []
   for (const adherent of phoneMatches) {
-    if (memberIdSuffix(adherent.id) === codeUpper) {
-      accepted.push(adherent)
-      continue
-    }
-    if (adherent.pinHash && /^\d{4}$/.test(code)) {
-      if (await verifyMemberPin(code, adherent.pinHash)) {
+    if (adherent.pinHash) {
+      if (/^\d{4}$/.test(code) && (await verifyMemberPin(code, adherent.pinHash))) {
         accepted.push(adherent)
       }
+      continue
+    }
+    if (memberIdSuffix(adherent.id) === codeUpper) {
+      accepted.push(adherent)
     }
   }
 

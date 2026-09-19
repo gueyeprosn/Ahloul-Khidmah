@@ -9,6 +9,7 @@ export function rid(prefix: string) {
 export async function resetStoreTables() {
   await prisma.review.deleteMany()
   await prisma.couponUsage.deleteMany()
+  await prisma.couponClaim.deleteMany()
   await prisma.coupon.deleteMany()
   await prisma.inventoryTransaction.deleteMany()
   await prisma.orderItem.deleteMany()

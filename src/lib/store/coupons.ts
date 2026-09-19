@@ -3,7 +3,14 @@ import { prisma } from "@/lib/db"
 export type CouponType = "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING"
 
 export type CouponValidationResult =
-  | { ok: true; couponId: string; discountAmount: number; freeShipping: boolean }
+  | {
+      ok: true
+      couponId: string
+      discountAmount: number
+      freeShipping: boolean
+      maxUses: number | null
+      usesPerCustomer: number | null
+    }
   | { ok: false; error: string }
 
 /**
@@ -43,18 +50,20 @@ export async function validateCoupon(input: {
     return { ok: false, error: "Ce code est réservé aux membres connectés" }
   }
 
-  if (coupon.maxUses !== null) {
-    const totalUses = await prisma.couponUsage.count({ where: { couponId: coupon.id } })
-    if (totalUses >= coupon.maxUses) {
-      return { ok: false, error: "Ce code a atteint sa limite d'utilisation" }
-    }
+  // Vérifie contre les compteurs de réservation atomiques (claimedCount /
+  // CouponClaim), pas CouponUsage (qui ne trace que le payé) — un aperçu
+  // qui ignorerait les commandes en cours de paiement laisserait passer
+  // plus de monde que maxUses ne l'autorise réellement à la validation
+  // finale (voir claimCoupon dans coupon-claims.ts).
+  if (coupon.maxUses !== null && coupon.claimedCount >= coupon.maxUses) {
+    return { ok: false, error: "Ce code a atteint sa limite d'utilisation" }
   }
 
   if (coupon.usesPerCustomer !== null) {
-    const customerUses = await prisma.couponUsage.count({
-      where: { couponId: coupon.id, customerPhone: input.customerPhone },
+    const claim = await prisma.couponClaim.findUnique({
+      where: { couponId_customerPhone: { couponId: coupon.id, customerPhone: input.customerPhone } },
     })
-    if (customerUses >= coupon.usesPerCustomer) {
+    if (claim && claim.count >= coupon.usesPerCustomer) {
       return { ok: false, error: "Vous avez déjà utilisé ce code" }
     }
   }
@@ -69,5 +78,12 @@ export async function validateCoupon(input: {
     freeShipping = true
   }
 
-  return { ok: true, couponId: coupon.id, discountAmount, freeShipping }
+  return {
+    ok: true,
+    couponId: coupon.id,
+    discountAmount,
+    freeShipping,
+    maxUses: coupon.maxUses,
+    usesPerCustomer: coupon.usesPerCustomer,
+  }
 }

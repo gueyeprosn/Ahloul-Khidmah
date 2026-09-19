@@ -8,7 +8,12 @@ import { resetStoreTables, createTestProduct, rid } from "../helpers"
 // passe autour de cet appel (réservation de stock, coupon, idempotence).
 vi.mock("@/lib/paydunya", () => ({
   paydunyaConfigured: () => true,
-  createCheckoutInvoice: vi.fn(async () => ({ token: "fake-token", url: "https://example.test/fake-invoice" })),
+  createCheckoutInvoice: vi.fn(async () => ({
+    // Un token unique par appel — Order.paymentToken est @unique, une valeur
+    // fixe ferait échouer tout test créant plusieurs commandes réelles.
+    token: `fake-token-${Math.random().toString(36).slice(2)}`,
+    url: "https://example.test/fake-invoice",
+  })),
   confirmCheckoutInvoice: vi.fn(async () => ({ status: "completed" as const, raw: {} })),
 }))
 
@@ -191,6 +196,73 @@ describe("createStoreOrder", () => {
 
     const fresh = await prisma.product.findUniqueOrThrow({ where: { id: product.id } })
     expect(fresh.reserved).toBe(0)
+  })
+
+  // Audit sécurité 2026 (V-07) : la réservation atomique du coupon doit être
+  // intégrée à createStoreOrder lui-même, pas seulement testable en isolation
+  // dans coupon-claims.test.ts — sinon un mauvais branchement passerait
+  // inaperçu malgré des unités qui passent.
+  it("un coupon maxUses=1 rejette la 2e commande, même sans concurrence réelle", async () => {
+    const coupon = await prisma.coupon.create({
+      data: { code: rid("UNIQUE").toUpperCase(), type: "PERCENTAGE", value: 10, active: true, maxUses: 1 },
+    })
+    const product = await createTestProduct({ price: 1000, stock: 10 })
+
+    const first = await createStoreOrder({
+      items: [{ productId: product.id, variantId: null, quantity: 1 }],
+      customerName: "Cliente A",
+      customerPhone: "+221771112233",
+      shippingZone: "retrait",
+      couponCode: coupon.code,
+    })
+    expect(first.orderId).toBeTruthy()
+
+    await expect(
+      createStoreOrder({
+        items: [{ productId: product.id, variantId: null, quantity: 1 }],
+        customerName: "Cliente B",
+        customerPhone: "+221779998877",
+        shippingZone: "retrait",
+        couponCode: coupon.code,
+      })
+    ).rejects.toThrow(CheckoutError)
+
+    // Le stock de la 2e tentative (rejetée après réservation du coupon)
+    // doit avoir été relâché comme pour tout autre échec de commande.
+    const fresh = await prisma.product.findUniqueOrThrow({ where: { id: product.id } })
+    expect(fresh.reserved).toBe(1) // seule la commande de Cliente A reste réservée
+  })
+
+  it("annuler une commande relâche le coupon réservé pour un nouveau client", async () => {
+    const coupon = await prisma.coupon.create({
+      data: { code: rid("RELACHE").toUpperCase(), type: "PERCENTAGE", value: 10, active: true, maxUses: 1 },
+    })
+    const product = await createTestProduct({ price: 1000, stock: 10 })
+
+    const first = await createStoreOrder({
+      items: [{ productId: product.id, variantId: null, quantity: 1 }],
+      customerName: "Cliente A",
+      customerPhone: "+221771112233",
+      shippingZone: "retrait",
+      couponCode: coupon.code,
+    })
+
+    await prisma.order.update({ where: { id: first.orderId }, data: { status: "CANCELLED" } })
+    const { releaseCouponClaimForOrder } = await import("@/lib/store/coupon-claims")
+    const cancelled = await prisma.order.findUniqueOrThrow({ where: { id: first.orderId } })
+    await releaseCouponClaimForOrder(cancelled)
+
+    const freshCoupon = await prisma.coupon.findUniqueOrThrow({ where: { id: coupon.id } })
+    expect(freshCoupon.claimedCount).toBe(0)
+
+    const second = await createStoreOrder({
+      items: [{ productId: product.id, variantId: null, quantity: 1 }],
+      customerName: "Cliente B",
+      customerPhone: "+221779998877",
+      shippingZone: "retrait",
+      couponCode: coupon.code,
+    })
+    expect(second.orderId).toBeTruthy()
   })
 })
 

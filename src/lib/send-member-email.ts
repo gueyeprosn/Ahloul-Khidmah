@@ -44,6 +44,7 @@ export async function sendAdherentBadgeEmail(
       badgeEmailSentAt: true,
       memberNumber: true,
       photoUrl: true,
+      pinHash: true,
     },
   })
 
@@ -61,7 +62,7 @@ export async function sendAdherentBadgeEmail(
   }
 
   const validationUrl = buildValidationUrl({ id: adherent.id })
-  const access = memberAccessLines(adherent.id)
+  const access = memberAccessLines(adherent.id, Boolean(adherent.pinHash))
   const portalUrl = buildMesVersementsUrl()
   const suffix = memberIdSuffix(adherent.id)
   const name = `${adherent.prenoms} ${adherent.nom}`.trim()

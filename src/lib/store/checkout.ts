@@ -7,6 +7,7 @@ import {
 import { createOrderWithNumber } from "@/lib/store/order-number"
 import { notifyOrderPaid } from "@/lib/store/notifications"
 import { validateCoupon } from "@/lib/store/coupons"
+import { claimCoupon, releaseCouponClaimForOrder } from "@/lib/store/coupon-claims"
 import { getMemberSession } from "@/lib/member-auth"
 import { shippingCostFor } from "@/features/store/shipping"
 import type { StoreCheckoutInput } from "@/features/store/checkout-schema"
@@ -197,6 +198,19 @@ export async function createStoreOrder(input: StoreCheckoutInput) {
       await releaseAll(reserved)
       throw new CheckoutError(result.error, 400)
     }
+    // Réservation atomique (CAS) — validateCoupon ci-dessus n'est qu'un
+    // instantané, la réservation est le seul point qui fait réellement foi
+    // face à des commandes concurrentes sur le même code.
+    const claimed = await claimCoupon(
+      result.couponId,
+      input.customerPhone,
+      result.maxUses,
+      result.usesPerCustomer
+    )
+    if (!claimed) {
+      await releaseAll(reserved)
+      throw new CheckoutError("Ce code promo vient d'atteindre sa limite d'utilisation", 409)
+    }
     discount = result.discountAmount
     if (result.freeShipping) shippingCost = 0
     appliedCouponCode = couponCode.toUpperCase()
@@ -236,6 +250,9 @@ export async function createStoreOrder(input: StoreCheckoutInput) {
     })
   } catch (e) {
     await releaseAll(reserved)
+    if (appliedCouponCode) {
+      await releaseCouponClaimForOrder({ couponCode: appliedCouponCode, customerPhone: input.customerPhone })
+    }
     throw e
   }
 
@@ -280,6 +297,7 @@ export async function createStoreOrder(input: StoreCheckoutInput) {
     return { orderId: order.id, orderNumber: order.orderNumber, url: invoice.url, token: invoice.token }
   } catch (e) {
     await releaseAll(reserved)
+    await releaseCouponClaimForOrder(order)
     await prisma.order.update({
       where: { id: order.id },
       data: { status: "CANCELLED", paymentStatus: "FAILED" },
@@ -314,6 +332,7 @@ export async function completeStoreOrderByToken(token: string) {
             quantity: i.quantity,
           }))
         )
+        await releaseCouponClaimForOrder(order)
       }
     }
     const fresh = await prisma.order.findUnique({ where: { id: order.id }, include: { items: true } })

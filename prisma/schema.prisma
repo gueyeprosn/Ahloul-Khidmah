@@ -409,15 +409,39 @@ model Coupon {
   usesPerCustomer Int? // null = illimité
   active          Boolean       @default(true)
   membersOnly     Boolean       @default(false)
+  /// Nombre de réservations actives (commande créée, pas forcément payée) —
+  /// incrémenté/décrémenté par CAS (updateMany conditionnel) à la création
+  /// et à l'annulation d'une commande, même principe que Product.reserved.
+  /// C'est ce compteur qui fait foi pour maxUses, pas CouponUsage (qui ne
+  /// trace que les commandes réellement payées — audit sécurité 2026, la
+  /// vérification précédente comptait CouponUsage sans aucune réservation
+  /// atomique, permettant de dépasser maxUses par une simple concurrence).
+  claimedCount    Int           @default(0)
   usages          CouponUsage[]
+  claims          CouponClaim[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@index([active])
 }
 
-/// Une ligne par commande ayant réellement utilisé un coupon — sert à
-/// vérifier maxUses/usesPerCustomer et à tracer l'historique.
+/// Compteur par client (téléphone) des réservations actives d'un coupon —
+/// pendant de claimedCount pour la limite usesPerCustomer. Une seule ligne
+/// par (couponId, customerPhone), incrémentée/décrémentée par CAS.
+model CouponClaim {
+  id            String @id @default(cuid())
+  couponId      String
+  coupon        Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerPhone String
+  count         Int    @default(0)
+
+  @@unique([couponId, customerPhone])
+  @@index([couponId])
+}
+
+/// Une ligne par commande ayant réellement payé avec un coupon — journal
+/// historique pour l'admin (qui, quand, combien) ; ne sert plus à appliquer
+/// maxUses/usesPerCustomer (voir Coupon.claimedCount / CouponClaim).
 model CouponUsage {
   id             String   @id @default(cuid())
   couponId       String

@@ -1,4 +1,4 @@
-import { createHash } from "crypto"
+import { createHash, timingSafeEqual } from "crypto"
 
 export type PaydunyaMode = "test" | "live"
 
@@ -46,7 +46,14 @@ export function verifyPaydunyaHash(hash: string | undefined | null) {
   const master = process.env.PAYDUNYA_MASTER_KEY
   if (!master || !hash) return false
   const expected = createHash("sha512").update(master).digest("hex")
-  return expected.toLowerCase() === String(hash).toLowerCase()
+  const given = String(hash).toLowerCase()
+  // Comparaison à temps constant — évite un canal auxiliaire de timing sur
+  // un secret, même si la fenêtre d'exploitation réelle est très étroite ici
+  // (audit sécurité 2026).
+  const expectedBuf = Buffer.from(expected, "utf8")
+  const givenBuf = Buffer.from(given, "utf8")
+  if (expectedBuf.length !== givenBuf.length) return false
+  return timingSafeEqual(expectedBuf, givenBuf)
 }
 
 export type CreateInvoiceInput = {

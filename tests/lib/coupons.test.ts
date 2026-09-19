@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { prisma } from "@/lib/db"
 import { validateCoupon } from "@/lib/store/coupons"
-import { resetStoreTables, createTestProduct, createTestOrder, rid } from "../helpers"
+import { claimCoupon } from "@/lib/store/coupon-claims"
+import { resetStoreTables, rid } from "../helpers"
 
 describe("validateCoupon", () => {
   beforeEach(async () => {
@@ -80,21 +81,15 @@ describe("validateCoupon", () => {
     expect(r.ok).toBe(true)
   })
 
-  it("limite par client : bloque le même client après utilisation, laisse passer un autre", async () => {
+  // La limite s'appuie désormais sur claimedCount/CouponClaim (réservés dès
+  // la création de commande), pas sur un décompte de CouponUsage (qui ne
+  // trace que le payé) — voir audit sécurité 2026 / coupon-claims.ts.
+  it("limite par client : bloque le même client après réservation, laisse passer un autre", async () => {
     const coupon = await prisma.coupon.create({
       data: { code: "UNEFOIS", type: "FREE_SHIPPING", active: true, usesPerCustomer: 1 },
     })
-    const product = await createTestProduct()
-    const order = await createTestOrder({
-      customerPhone: "+221770000099",
-      couponCode: "UNEFOIS",
-      status: "PROCESSING",
-      paymentStatus: "PAID",
-      items: { create: [{ productId: product.id, productName: product.name, sku: product.sku, unitPrice: 1500, quantity: 1, subtotal: 1500 }] },
-    })
-    await prisma.couponUsage.create({
-      data: { couponId: coupon.id, orderId: order.id, customerPhone: "+221770000099", discountAmount: 0 },
-    })
+    const claimed = await claimCoupon(coupon.id, "+221770000099", null, 1)
+    expect(claimed).toBe(true)
 
     const sameCustomer = await validateCoupon({ code: "UNEFOIS", subtotal: 5000, customerPhone: "+221770000099", isMember: false })
     expect(sameCustomer.ok).toBe(false)
@@ -107,16 +102,8 @@ describe("validateCoupon", () => {
     const coupon = await prisma.coupon.create({
       data: { code: rid("MAX1").toUpperCase(), type: "PERCENTAGE", value: 10, active: true, maxUses: 1 },
     })
-    const product = await createTestProduct()
-    const order = await createTestOrder({
-      couponCode: coupon.code,
-      status: "PROCESSING",
-      paymentStatus: "PAID",
-      items: { create: [{ productId: product.id, productName: product.name, sku: product.sku, unitPrice: 1500, quantity: 1, subtotal: 1500 }] },
-    })
-    await prisma.couponUsage.create({
-      data: { couponId: coupon.id, orderId: order.id, customerPhone: order.customerPhone, discountAmount: 150 },
-    })
+    const claimed = await claimCoupon(coupon.id, "+221770000001", 1, null)
+    expect(claimed).toBe(true)
 
     const r = await validateCoupon({ code: coupon.code, subtotal: 5000, customerPhone: "+221779998888", isMember: false })
     expect(r.ok).toBe(false)

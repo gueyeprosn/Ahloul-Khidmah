@@ -20,10 +20,21 @@ export function buildMonEspaceUrl() {
   return `${siteOrigin()}/mon-espace`
 }
 
-/** Lignes d'accès à inclure dans WhatsApp / email. */
-export function memberAccessLines(id: string) {
-  const suffix = memberIdSuffix(id)
+/**
+ * Lignes d'accès à inclure dans WhatsApp / email. Une fois un PIN personnel
+ * défini, le suffixe d'ID n'est plus une méthode de connexion valide (voir
+ * findAdherentByTelAndCode) — le message ne doit plus l'indiquer comme accès,
+ * sous peine d'égarer le membre avec une information désormais fausse.
+ */
+export function memberAccessLines(id: string, hasPin = false) {
   const url = buildMonEspaceUrl()
+  if (hasPin) {
+    return [
+      `Votre espace membre : ${url}`,
+      "Accès : votre téléphone + le code PIN que vous avez défini.",
+    ]
+  }
+  const suffix = memberIdSuffix(id)
   return [
     `Votre espace membre : ${url}`,
     `Accès : votre téléphone + les 4 derniers caractères de votre N° (${suffix})`,

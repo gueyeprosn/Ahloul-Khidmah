@@ -33,6 +33,7 @@ export async function sendAdherentBadgeWhatsApp(
       badgeSentAt: true,
       memberNumber: true,
       photoUrl: true,
+      pinHash: true,
     },
   })
 
@@ -62,6 +63,7 @@ export async function sendAdherentBadgeWhatsApp(
     validationUrl,
     memberNumber: adherent.memberNumber,
     photoUrl: adherent.photoUrl,
+    hasPin: Boolean(adherent.pinHash),
   }
 
   try {

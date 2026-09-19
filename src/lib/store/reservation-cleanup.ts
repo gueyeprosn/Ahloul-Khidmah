@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db"
 import { completeStoreOrderByToken } from "@/lib/store/checkout"
+import { releaseCouponClaimForOrder } from "@/lib/store/coupon-claims"
 
 const STALE_TIMEOUT_MS = 45 * 60 * 1000
 const SWEEP_INTERVAL_MS = 10 * 60 * 1000
@@ -50,6 +51,8 @@ export async function releaseStaleReservations() {
     // count === 0 : déjà traitée entre-temps (payée par la reconfirmation
     // ci-dessus, ou annulée par un admin) — rien à relâcher, déjà fait.
     if (claimed.count === 0) continue
+
+    await releaseCouponClaimForOrder(order)
 
     for (const item of order.items) {
       if (!item.productId) continue
