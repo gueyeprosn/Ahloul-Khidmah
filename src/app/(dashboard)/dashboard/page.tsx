@@ -135,7 +135,7 @@ export default async function DashboardPage() {
   const canalTotal = enLigne + cellule + donsMontant || 1
   const channels = [
     {
-      label: "Cotisations en ligne (Wave / Orange Money)",
+      label: "Cotisations en ligne (Wave, Orange Money, carte)",
       amount: enLigne,
       value: Math.round((enLigne / canalTotal) * 100),
     },

@@ -31,6 +31,7 @@ export async function GET(
       type: true,
       token: true,
       receiptUrl: true,
+      checkoutUrl: true,
     },
   })
 
@@ -50,6 +51,7 @@ export async function GET(
           type: result.payment.type,
           token: result.payment.token,
           receiptUrl: result.payment.receiptUrl,
+          checkoutUrl: result.payment.checkoutUrl,
         }
       }
     } catch {
@@ -64,5 +66,9 @@ export async function GET(
     amount: payment.amount,
     type: payment.type,
     receiptUrl: payment.receiptUrl,
+    // Facture PayDunya hébergée — inclut la carte bancaire quand elle est
+    // activée sur le compte marchand. Repli pour les clients sans Wave ni
+    // Orange Money (voir SoftPayPanel).
+    checkoutUrl: payment.checkoutUrl,
   })
 }

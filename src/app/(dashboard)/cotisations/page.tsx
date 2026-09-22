@@ -53,7 +53,7 @@ export default async function CotisationsPage({
     <>
       <PageHeader
         title="Cotisations"
-        description="Suivi par mois — SoftPay (Wave / Orange Money) ou versement cellule."
+        description="Suivi par mois — en ligne (Wave, Orange Money, carte bancaire) ou versement cellule."
       />
       <CotisationsClient periode={periode} rows={rows} />
     </>

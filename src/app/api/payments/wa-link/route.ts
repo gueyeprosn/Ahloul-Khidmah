@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         ? `Voici le lien pour régler ${periodes.length} mois de cotisation (${periodes.map(labelPeriode).join(", ")}) en un seul paiement — ${formatFcfa(payment.amount)}.`
         : `Voici le lien pour régler votre cotisation ${periode} (${formatFcfa(payment.amount)}).`,
     payment.checkoutUrl,
-    "Ahloul Khidmah — Wave ou Orange Money.",
+    "Ahloul Khidmah — Wave, Orange Money ou carte bancaire.",
   ].join("\n")
 
   return NextResponse.json({

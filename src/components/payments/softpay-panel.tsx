@@ -15,6 +15,7 @@ export type SoftpayPanelLabels = {
   subtitle: string
   wave: string
   orange: string
+  card: string
   phone: string
   pay: string
   paying: string
@@ -27,13 +28,15 @@ export type SoftpayPanelLabels = {
   error: string
   changeMethod: string
   fallbackHint: string
+  cardCta: string
 }
 
 const DEFAULT_LABELS_FR: SoftpayPanelLabels = {
   title: "Payer en ligne",
-  subtitle: "Choisissez Wave ou Orange Money — sans passer par la page PayDunya.",
+  subtitle: "Choisissez Wave, Orange Money ou une carte bancaire.",
   wave: "Wave",
   orange: "Orange Money",
+  card: "Carte bancaire",
   phone: "Téléphone du paiement",
   pay: "Continuer le paiement",
   paying: "Connexion…",
@@ -47,6 +50,7 @@ const DEFAULT_LABELS_FR: SoftpayPanelLabels = {
   changeMethod: "Changer de moyen",
   fallbackHint:
     "Mode test : SoftPay nécessite des clés live. Ouverture du paiement sécurisé classique.",
+  cardCta: "Visa, Mastercard — page sécurisée PayDunya",
 }
 
 type SoftpayPanelProps = {
@@ -100,10 +104,30 @@ export function SoftPayPanel({
   const [result, setResult] = useState<SoftpayResponse | null>(null)
   const [polling, setPolling] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
   // Verrou synchrone — évite qu'un double-clic déclenche deux tentatives de
   // paiement SoftPay concurrentes avant que le bouton ne se désactive
   // réellement (même raisonnement que boutique/checkout/page.tsx).
   const startingRef = useRef(false)
+
+  // Facture PayDunya déjà créée (checkoutUrl) — récupérée une fois pour
+  // proposer "Carte bancaire" à côté de Wave/Orange, sans dupliquer la
+  // logique de sondage de statut ci-dessous (indépendante de `polling`).
+  useEffect(() => {
+    let cancelled = false
+    if (!paymentId) return
+    fetch(statusEndpoint(paymentId))
+      .then((res) => res.json())
+      .then((data: { checkoutUrl?: string }) => {
+        if (!cancelled && data.checkoutUrl) setCheckoutUrl(data.checkoutUrl)
+      })
+      .catch(() => {
+        /* pas grave — le bouton carte reste simplement masqué */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [paymentId, statusEndpoint])
 
   // Resynchronise `phone` quand le parent change `defaultPhone`, sans passer
   // par un effet (évite le rendu en cascade — voir react-hooks/set-state-in-effect).
@@ -246,7 +270,8 @@ export function SoftPayPanel({
 
           <div
             className={cn(
-              "grid gap-2 sm:grid-cols-2",
+              "grid gap-2",
+              checkoutUrl ? "sm:grid-cols-3" : "sm:grid-cols-2",
               compact ? "mt-2.5" : "mt-4 gap-3"
             )}
           >
@@ -294,6 +319,26 @@ export function SoftPayPanel({
                 </span>
               </span>
             </button>
+            {checkoutUrl ? (
+              <a
+                href={checkoutUrl}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-xl border-2 border-[#E6DCC0] bg-[var(--ak-ivory)] text-start transition-all hover:border-[var(--ak-gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-emerald-mid)]",
+                  compact ? "min-h-12 px-3 py-2.5" : "min-h-14 px-4 py-3.5"
+                )}
+              >
+                <CanalIcon
+                  canal="paydunya"
+                  className={compact ? "size-9" : "size-10"}
+                />
+                <span>
+                  <span className="block text-sm font-bold text-[var(--ak-emerald-deep)]">
+                    {t.card}
+                  </span>
+                  <span className="text-xs text-[var(--ak-ink-soft)]">{t.cardCta}</span>
+                </span>
+              </a>
+            ) : null}
           </div>
         </>
       ) : redirecting ? (

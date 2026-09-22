@@ -21,7 +21,15 @@ export async function GET(
 
   let order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, orderNumber: true, status: true, paymentStatus: true, total: true, paymentToken: true },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentStatus: true,
+      total: true,
+      paymentToken: true,
+      checkoutUrl: true,
+    },
   })
   if (!order) {
     return NextResponse.json({ error: "Commande introuvable" }, { status: 404 })
@@ -38,6 +46,7 @@ export async function GET(
           paymentStatus: result.order.paymentStatus,
           total: result.order.total,
           paymentToken: result.order.paymentToken,
+          checkoutUrl: result.order.checkoutUrl,
         }
       }
     } catch {
@@ -52,5 +61,9 @@ export async function GET(
     status: order.paymentStatus === "PAID" ? "completed" : order.status === "CANCELLED" ? "canceled" : "pending",
     paymentStatus: order.paymentStatus,
     total: order.total,
+    // Facture PayDunya hébergée — inclut la carte bancaire quand elle est
+    // activée sur le compte marchand. Repli pour les clients sans Wave ni
+    // Orange Money (voir SoftPayPanel).
+    checkoutUrl: order.checkoutUrl,
   })
 }

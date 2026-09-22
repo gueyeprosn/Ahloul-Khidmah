@@ -364,7 +364,7 @@ export function CotisationsClient({
                         >
                           {loadingId === row.adherentId
                             ? "…"
-                            : "Wave / Orange"}
+                            : "Payer en ligne"}
                         </Button>
                         <Button
                           size="sm"
@@ -400,7 +400,7 @@ export function CotisationsClient({
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-[var(--ak-ivory)] p-4 shadow-xl">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-[var(--ak-emerald-deep)]">
-                Paiement Wave / Orange Money
+                Paiement en ligne
               </p>
               <Button
                 size="sm"

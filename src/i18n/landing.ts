@@ -262,7 +262,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
         },
         {
           q: "Y a-t-il une cotisation ?",
-          a: "Oui. Plusieurs montants mensuels sont proposés (1 400, 14 000, 140 000 FCFA ou autre), via Wave, Orange Money ou versement en cellule.",
+          a: "Oui. Plusieurs montants mensuels sont proposés (1 400, 14 000, 140 000 FCFA ou autre), via Wave, Orange Money, carte bancaire ou versement en cellule.",
         },
         {
           q: "Comment sont utilisés les fonds ?",
@@ -472,7 +472,7 @@ Cette vision repose sur une conviction forte : le développement matériel, le d
         },
         {
           q: "هل هناك اشتراك؟",
-          a: "نعم. تُقترح مبالغ شهرية (١ ٤٠٠، ١٤ ٠٠٠، ١٤٠ ٠٠٠ فرنك أو مبلغ آخر)، عبر Wave أو Orange Money أو الدفع في الخلية.",
+          a: "نعم. تُقترح مبالغ شهرية (١ ٤٠٠، ١٤ ٠٠٠، ١٤٠ ٠٠٠ فرنك أو مبلغ آخر)، عبر Wave أو Orange Money أو بطاقة بنكية أو الدفع في الخلية.",
         },
         {
           q: "كيف تُستخدم الأموال؟",

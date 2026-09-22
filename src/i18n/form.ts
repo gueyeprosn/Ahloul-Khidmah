@@ -299,7 +299,7 @@ export const formDictionaries: Record<Locale, FormDict> = {
       payment: {
         title: "Payer en ligne",
         subtitle:
-          "Choisissez Wave ou Orange Money. Votre badge membre sera disponible après le paiement.",
+          "Choisissez Wave, Orange Money ou une carte bancaire. Votre badge membre sera disponible après le paiement.",
         cancel: "Modifier mes informations",
         errorNoPayment:
           "Le paiement en ligne est temporairement indisponible. Réessayez plus tard.",
@@ -336,7 +336,7 @@ export const formDictionaries: Record<Locale, FormDict> = {
       cellule: "Versement cellule",
       celluleSub: "Espèces, en cellule locale",
       paydunya: "Payer en ligne",
-      paydunyaSub: "Wave ou Orange Money (SoftPay)",
+      paydunyaSub: "Wave, Orange Money ou carte bancaire",
     },
     domaines: domainesFr,
     declaration: {
@@ -472,7 +472,7 @@ export const formDictionaries: Record<Locale, FormDict> = {
       payment: {
         title: "الدفع أونلاين",
         subtitle:
-          "اختاروا Wave أو Orange Money. ستتوفر بطاقة العضوية بعد الدفع.",
+          "اختاروا Wave أو Orange Money أو بطاقة بنكية. ستتوفر بطاقة العضوية بعد الدفع.",
         cancel: "تعديل معلوماتي",
         errorNoPayment:
           "الدفع أونلاين غير متاح مؤقتاً. حاولوا لاحقاً.",
@@ -509,7 +509,7 @@ export const formDictionaries: Record<Locale, FormDict> = {
       cellule: "دفع في الخلية",
       celluleSub: "نقداً، في الخلية المحلية",
       paydunya: "الدفع أونلاين",
-      paydunyaSub: "Wave أو Orange Money (SoftPay)",
+      paydunyaSub: "Wave أو Orange Money أو بطاقة بنكية",
     },
     domaines: domainesAr,
     declaration: {
