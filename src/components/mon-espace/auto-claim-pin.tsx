@@ -72,15 +72,15 @@ export function AutoClaimPin({ paymentId }: { paymentId: string }) {
         <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
           Code enregistré — votre espace membre est prêt.
         </p>
-        <WebPushToggle />
+        <WebPushToggle variant="prominent" />
       </div>
     )
   }
 
   return (
     <div className="space-y-4 text-start">
+      <WebPushToggle variant="prominent" />
       <PinSetupForm autoFocus onSaved={() => setPinDone(true)} />
-      <WebPushToggle />
     </div>
   )
 }

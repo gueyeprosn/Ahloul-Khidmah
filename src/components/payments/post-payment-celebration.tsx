@@ -75,8 +75,8 @@ export function PostPaymentCelebration({ paymentId, kind, onClose }: Props) {
         : "Merci pour votre don."
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
-      <div className="relative w-full max-w-md rounded-2xl border border-[var(--ak-gold)] bg-[var(--ak-ivory)] p-6 text-center shadow-2xl md:p-8">
+    <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/40 px-4 py-8">
+      <div className="relative m-auto w-full max-w-md rounded-2xl border border-[var(--ak-gold)] bg-[var(--ak-ivory)] p-6 text-center shadow-2xl md:p-8">
         {phase === "result" ? (
           <button
             type="button"
@@ -107,6 +107,12 @@ export function PostPaymentCelebration({ paymentId, kind, onClose }: Props) {
             </h2>
             <p className="mt-2 text-sm text-[var(--ak-ink-soft)]">{message}</p>
 
+            {claimed ? (
+              <div className="mt-5 text-start">
+                <WebPushToggle variant="prominent" />
+              </div>
+            ) : null}
+
             {claimed && !pinDone ? (
               <div className="mt-6 text-start">
                 <PinSetupForm
@@ -123,11 +129,6 @@ export function PostPaymentCelebration({ paymentId, kind, onClose }: Props) {
               </p>
             ) : null}
 
-            {claimed ? (
-              <div className="mt-4 text-start">
-                <WebPushToggle />
-              </div>
-            ) : null}
 
             <button
               type="button"

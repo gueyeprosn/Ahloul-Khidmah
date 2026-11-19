@@ -646,7 +646,7 @@ export function MonEspaceClient() {
         </p>
       ) : null}
 
-      <WebPushToggle />
+      <WebPushToggle variant="banner" />
 
       {tab === "profil" ? (
         <div className="space-y-6">
