@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "fs/promises"
 import path from "path"
 import { randomBytes } from "crypto"
 import { NextResponse } from "next/server"
+import { optimizeUpload } from "@/lib/optimize-upload"
 import { fileTypeFromBuffer } from "file-type"
 import { prisma } from "@/lib/db"
 import { getMemberSession } from "@/lib/member-auth"
@@ -59,7 +60,10 @@ export async function POST(request: Request) {
     const name = `membre-${session.adherentId}-${Date.now()}-${randomBytes(4).toString("hex")}${ext}`
     const dir = path.join(process.cwd(), "public", "uploads")
     await mkdir(dir, { recursive: true })
-    await writeFile(path.join(dir, name), buf)
+    await writeFile(
+      path.join(dir, name),
+      await optimizeUpload(buf, detected.mime)
+    )
 
     const photoUrl = `/uploads/${name}`
     await prisma.adherent.update({

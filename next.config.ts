@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   serverExternalPackages: ["@napi-rs/canvas"],
   images: {
+    formats: ["image/avif", "image/webp"],
+    qualities: [60, 75],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     localPatterns: [
       { pathname: "/brand/**" },
       { pathname: "/icons/**" },

@@ -817,6 +817,12 @@ export function MonEspaceClient() {
           </div>
 
           <div className="rounded-xl border border-[var(--ak-gold)]/50 bg-white p-5">
+          <Link
+            href="/mon-espace/historique"
+            className="mb-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--ak-emerald-deep)] px-5 text-sm font-semibold text-[var(--ak-emerald-deep)]"
+          >
+            Historique complet et impression
+          </Link>
           <p className="mb-3 text-sm text-[var(--ak-ink-soft)]">
             Cotisation prévue :{" "}
             <span className="font-medium text-[var(--ak-emerald-deep)]">

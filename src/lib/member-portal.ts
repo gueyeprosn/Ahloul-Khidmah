@@ -80,10 +80,37 @@ const cotisationsSelect = {
  * - le PIN à 4 chiffres s'il a été défini.
  * Le téléphone est comparé de façon souple (indicatif, troncature).
  */
-export async function findAdherentByTelAndCode(tel: string, codeRaw: string) {
+/** Préfiltre SQL : évite de charger tous les adhérents à chaque tentative de
+ * connexion. La comparaison de référence reste `phonesMatch` (en JS) sur le
+ * petit ensemble retenu — le préfiltre est volontairement plus large. */
+async function candidateIdsByPhone(tel: string): Promise<string[]> {
+  const digits = tel.replace(/\D/g, "")
+  if (digits.length < 6) return []
+  const core = digits.length >= 9 ? digits.slice(-9) : digits
+  // 8 premiers chiffres du noyau : couvre aussi un numéro enregistré tronqué.
+  const needle = `%${core.slice(0, 8)}%`
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "Adherent"
+    WHERE replace(replace(replace(replace(replace(replace("tel",' ',''),'+',''),'-',''),'.',''),'(',''),')','') LIKE ${needle}
+       OR replace(replace(replace(replace(replace(replace(COALESCE("whatsapp",''),' ',''),'+',''),'-',''),'.',''),'(',''),')','') LIKE ${needle}`
+  return rows.map((r) => r.id)
+}
+
+export type MemberLoginMethod = "pin" | "suffix"
+
+/**
+ * Recherche adhérent par téléphone + code d'accès, en indiquant la méthode
+ * qui a réussi (PIN ou suffixe d'ID). Sert à l'app mobile, qui refuse la
+ * méthode « suffixe » sauf pour imposer la création d'un PIN.
+ */
+export async function findAdherentForLogin(tel: string, codeRaw: string) {
   const code = codeRaw.trim()
   const codeUpper = code.toUpperCase()
+  const ids = await candidateIdsByPhone(tel)
+  if (ids.length === 0) return null
+
   const candidates = await prisma.adherent.findMany({
+    where: { id: { in: ids } },
     select: {
       ...adherentSelect,
       pinHash: true,
@@ -97,26 +124,35 @@ export async function findAdherentByTelAndCode(tel: string, codeRaw: string) {
       (a.whatsapp ? phonesMatch(a.whatsapp, tel) : false)
   )
 
-  if (phoneMatches.length === 0) return null
-
   // Dès qu'un membre a défini un PIN personnel, le suffixe d'ID (non
   // secret — envoyé en clair par WhatsApp/email, voir memberAccessLines)
   // cesse d'être une méthode d'accès valide : sinon un PIN "fort" resterait
   // contournable indéfiniment par la même porte faible (audit sécurité 2026).
-  const accepted: typeof phoneMatches = []
+  const accepted: { adherent: (typeof phoneMatches)[number]; method: MemberLoginMethod }[] = []
   for (const adherent of phoneMatches) {
     if (adherent.pinHash) {
       if (/^\d{4}$/.test(code) && (await verifyMemberPin(code, adherent.pinHash))) {
-        accepted.push(adherent)
+        accepted.push({ adherent, method: "pin" })
       }
       continue
     }
     if (memberIdSuffix(adherent.id) === codeUpper) {
-      accepted.push(adherent)
+      accepted.push({ adherent, method: "suffix" })
     }
   }
 
   return accepted.length === 1 ? accepted[0] : null
+}
+
+/**
+ * Recherche adhérent par téléphone + code d'accès (web, comportement inchangé).
+ * Le code accepté est :
+ * - les 4 derniers caractères du N° membre tant qu'aucun PIN n'est défini,
+ * - sinon uniquement le PIN à 4 chiffres.
+ */
+export async function findAdherentByTelAndCode(tel: string, codeRaw: string) {
+  const found = await findAdherentForLogin(tel, codeRaw)
+  return found ? found.adherent : null
 }
 
 export async function getAdherentForMemberSession(adherentId: string) {
@@ -174,4 +210,40 @@ export async function serializeMemberPortal(
     walletBalance,
     walletTransactions: walletTransactions.map(serializeWalletTransaction),
   }
+}
+
+/**
+ * Met à jour le profil du membre connecté (partagé web + mobile : une seule
+ * règle métier). Retourne null si le dossier n'existe pas. Le premier email
+ * renseigné déclenche l'envoi du badge/accès par email.
+ */
+export async function applyMemberProfileUpdate(
+  adherentId: string,
+  data: z.infer<typeof memberProfileUpdateSchema>
+) {
+  const existing = await prisma.adherent.findUnique({
+    where: { id: adherentId },
+    select: { id: true, email: true, badgeEmailSentAt: true },
+  })
+  if (!existing) return null
+
+  const email = data.email?.trim() || null
+  await prisma.adherent.update({
+    where: { id: adherentId },
+    data: {
+      nom: data.nom.trim(),
+      prenoms: data.prenoms.trim(),
+      whatsapp: data.whatsapp?.trim() || null,
+      email,
+      profession: data.profession.trim(),
+      autreProfession: data.autreProfession?.trim() || null,
+      ficheComplete: true,
+    },
+  })
+
+  if (email && !existing.email && !existing.badgeEmailSentAt) {
+    const { queueAdherentBadgeEmail } = await import("@/lib/send-member-email")
+    queueAdherentBadgeEmail(adherentId)
+  }
+  return getAdherentForMemberSession(adherentId)
 }

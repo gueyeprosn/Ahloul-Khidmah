@@ -4,6 +4,7 @@ import { randomBytes } from "crypto"
 import { NextResponse } from "next/server"
 import { fileTypeFromBuffer } from "file-type"
 import { getSession } from "@/lib/auth"
+import { optimizeUpload } from "@/lib/optimize-upload"
 
 const MAX_BYTES = 5 * 1024 * 1024
 const ALLOWED = new Set([
@@ -56,7 +57,10 @@ export async function POST(request: Request) {
     const name = `${Date.now()}-${randomBytes(6).toString("hex")}${ext}`
     const dir = path.join(process.cwd(), "public", "uploads")
     await mkdir(dir, { recursive: true })
-    await writeFile(path.join(dir, name), buf)
+    await writeFile(
+      path.join(dir, name),
+      await optimizeUpload(buf, detected.mime)
+    )
 
     return NextResponse.json({
       ok: true,

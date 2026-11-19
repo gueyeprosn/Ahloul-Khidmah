@@ -78,7 +78,13 @@ export async function POST(request: Request) {
         data: {
           ...(invoiceToken ? { token: invoiceToken } : {}),
           rawPayload: JSON.stringify(payload),
-          status: mappedStatus,
+          // « completed » n'est JAMAIS écrit ici : seul completePaymentByToken
+          // le pose, après confirmation serveur à serveur auprès de PayDunya,
+          // et déclenche en même temps les effets métier (cotisation payée,
+          // don validé…). Écrire « completed » d'abord faisait sortir
+          // completePaymentByToken prématurément pour les types cotisation/don
+          // (audit mobile S5, test tests/lib/ipn-cotisation.test.ts).
+          ...(mappedStatus !== "completed" ? { status: mappedStatus } : {}),
         },
       })
     }
