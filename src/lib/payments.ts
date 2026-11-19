@@ -15,7 +15,7 @@ import { walletCredit } from "@/lib/wallet"
 import { notifyPaymentCompleted } from "@/lib/payment-notify"
 
 /** Périodes couvertes par un paiement cotisation — `periodes` (multi-mois) sinon `periode` seul. */
-function paymentPeriodes(payment: {
+export function paymentPeriodes(payment: {
   periode: string | null
   periodes: string | null
 }) {
