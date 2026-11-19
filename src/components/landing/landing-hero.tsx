@@ -16,6 +16,7 @@ export function LandingHero({ isMember = false }: { isMember?: boolean }) {
         fill
         priority
         sizes="100vw"
+        quality={60}
         className="object-cover object-center"
       />
       <div
