@@ -12,6 +12,7 @@ import {
 } from "@/features/contributions/schema"
 import { getContributeDict } from "@/i18n/contribute"
 import { useOptionalLocale } from "@/components/landing/locale-provider"
+import { PaymentUnavailableDialog } from "@/components/payments/payment-unavailable-dialog"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { PostPaymentCelebration } from "@/components/payments/post-payment-celebration"
 import { Button } from "@/components/ui/button"
@@ -77,6 +78,7 @@ export function ContributeForm({
   const t = getContributeDict(locale).form
   const [submitting, setSubmitting] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState<string | null>(null)
   const [paymentId, setPaymentId] = useState<string | null>(null)
   const [payerPhone, setPayerPhone] = useState("")
   const [showMessage, setShowMessage] = useState(false)
@@ -135,6 +137,10 @@ export function ContributeForm({
         error?: string
         paymentId?: string
       }
+      if (res.status === 503) {
+        setUnavailable(data.error || "Paiement indisponible")
+        return
+      }
       if (!res.ok) {
         setApiError(data.error || "Erreur lors de la contribution")
         return
@@ -187,6 +193,10 @@ export function ContributeForm({
         className={cn("space-y-3", className)}
         noValidate
       >
+        <PaymentUnavailableDialog
+          message={unavailable}
+          onClose={() => setUnavailable(null)}
+        />
         <input
           type="text"
           tabIndex={-1}
@@ -378,6 +388,10 @@ export function ContributeForm({
       className={cn("space-y-6", className)}
       noValidate
     >
+      <PaymentUnavailableDialog
+        message={unavailable}
+        onClose={() => setUnavailable(null)}
+      />
       <input
         type="text"
         tabIndex={-1}

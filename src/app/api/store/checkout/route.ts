@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { storeCheckoutSchema } from "@/features/store/checkout-schema"
 import { CheckoutError, createStoreOrder } from "@/lib/store/checkout"
+import {
+  PAYDUNYA_UNAVAILABLE_MESSAGE,
+  PaydunyaUnavailableError,
+} from "@/lib/paydunya"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
 
 export async function POST(request: Request) {
@@ -28,6 +32,13 @@ export async function POST(request: Request) {
   } catch (e) {
     if (e instanceof CheckoutError) {
       return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    if (e instanceof PaydunyaUnavailableError) {
+      console.error(e.message)
+      return NextResponse.json(
+        { error: PAYDUNYA_UNAVAILABLE_MESSAGE },
+        { status: 503 }
+      )
     }
     console.error("store checkout error", e)
     const message =

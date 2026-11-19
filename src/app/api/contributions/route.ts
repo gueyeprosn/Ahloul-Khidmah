@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { contributionSchema } from "@/features/contributions/schema"
 import { createContributionCheckout } from "@/lib/contributions"
-import { paydunyaConfigured } from "@/lib/paydunya"
+import {
+  PAYDUNYA_UNAVAILABLE_MESSAGE,
+  PaydunyaUnavailableError,
+  paydunyaConfigured,
+} from "@/lib/paydunya"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
 
 export async function POST(request: Request) {
@@ -49,6 +53,13 @@ export async function POST(request: Request) {
       amount: payment.amount,
     })
   } catch (e) {
+    if (e instanceof PaydunyaUnavailableError) {
+      console.error(e.message)
+      return NextResponse.json(
+        { error: PAYDUNYA_UNAVAILABLE_MESSAGE },
+        { status: 503 }
+      )
+    }
     console.error(e)
     const message =
       process.env.NODE_ENV === "production"

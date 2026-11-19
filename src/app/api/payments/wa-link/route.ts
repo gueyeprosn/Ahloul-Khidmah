@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { resolveUnpaidPeriodes, startPaydunyaCheckout } from "@/lib/payments"
-import { paydunyaConfigured } from "@/lib/paydunya"
+import {
+  PAYDUNYA_UNAVAILABLE_MESSAGE,
+  PaydunyaUnavailableError,
+  paydunyaConfigured,
+} from "@/lib/paydunya"
 import { currentPeriode, labelPeriode } from "@/lib/periode"
 import { formatFcfa } from "@/lib/format"
 import { normalizeWaPhone } from "@/lib/whatsapp-shared"
@@ -54,12 +58,24 @@ export async function POST(request: Request) {
       ? await resolveUnpaidPeriodes(adherentId, monthsCount)
       : undefined
 
-  const payment = await startPaydunyaCheckout({
-    adherentId,
-    type,
-    periode,
-    periodes,
-  })
+  let payment: Awaited<ReturnType<typeof startPaydunyaCheckout>>
+  try {
+    payment = await startPaydunyaCheckout({
+      adherentId,
+      type,
+      periode,
+      periodes,
+    })
+  } catch (e) {
+    if (e instanceof PaydunyaUnavailableError) {
+      console.error(e.message)
+      return NextResponse.json(
+        { error: PAYDUNYA_UNAVAILABLE_MESSAGE },
+        { status: 503 }
+      )
+    }
+    throw e
+  }
   if (!payment.checkoutUrl) {
     return NextResponse.json(
       { error: "Lien de paiement indisponible" },

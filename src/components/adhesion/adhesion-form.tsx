@@ -17,6 +17,11 @@ import {
   persistTicket,
   type AdhesionTicket,
 } from "@/lib/adhesion-id"
+import { PaymentUnavailableDialog } from "@/components/payments/payment-unavailable-dialog"
+import {
+  WaveFallbackDialog,
+  type WaveFallback,
+} from "@/components/adhesion/wave-fallback-dialog"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { PostPaymentCelebration } from "@/components/payments/post-payment-celebration"
 import { Button } from "@/components/ui/button"
@@ -194,6 +199,9 @@ function AdhesionFormLight({
     null
   )
   const [formError, setFormError] = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState<string | null>(null)
+  const [waveFallback, setWaveFallback] = useState<WaveFallback | null>(null)
+  const [waveFullName, setWaveFullName] = useState("")
   const [celebrate, setCelebrate] = useState(false)
 
   const form = useForm<AdhesionLightValues>({
@@ -248,6 +256,18 @@ function AdhesionFormLight({
         paymentUrl?: string | null
         paymentId?: string | null
         preview?: PaymentPreview
+        fallback?: "wave"
+        wave?: WaveFallback
+      }
+      if (res.ok && payload.fallback === "wave" && payload.wave) {
+        setWaveFullName(`${values.prenoms} ${values.nom}`.trim())
+        setWaveFallback(payload.wave)
+        reset({ montant: initialMontant, website: "", paysRegion: "" })
+        return
+      }
+      if (res.status === 503) {
+        setUnavailable(payload.error || t.alerts.saveFailed)
+        return
       }
       if (!res.ok || !payload.paymentId || !payload.preview) {
         setFormError(payload.error || t.alerts.saveFailed)
@@ -380,6 +400,16 @@ function AdhesionFormLight({
       id="ak-adhesion-fiche"
     >
       <Honeypot register={register} />
+
+      <PaymentUnavailableDialog
+        message={unavailable}
+        onClose={() => setUnavailable(null)}
+      />
+      <WaveFallbackDialog
+        info={waveFallback}
+        fullName={waveFullName}
+        onClose={() => setWaveFallback(null)}
+      />
 
       {formError ? (
         <p
