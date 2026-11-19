@@ -63,6 +63,20 @@ describe("/api/mon-espace/push", () => {
     await POST(req("POST", { token: TOKEN, locale: "ar" })) // rafraîchissement : rien de plus
     expect(notifyDevice).toHaveBeenCalledTimes(1)
     expect((notifyDevice.mock.calls[0] as unknown[]).slice(0, 2)).toEqual([TOKEN, "ar"])
+    // Bienvenue personnalisée : nom, n° de badge, et le tap mène au badge.
+    const [, , content, opts] = notifyDevice.mock.calls[0] as unknown as [
+      string,
+      string,
+      { fr: { title: string; body: string }; ar: { title: string; body: string } },
+      { route: string; webPath: string },
+    ]
+    const owner = await prisma.adherent.findUnique({ where: { id: a.id }, select: { id: true, prenoms: true, nom: true } })
+    expect(content.fr.title).toContain("Bienvenue")
+    expect(content.fr.body).toContain(`${owner!.prenoms} ${owner!.nom}`.trim())
+    expect(content.fr.body).toContain(a.id)
+    expect(content.fr.body.toLowerCase()).toContain("badge")
+    expect(content.ar.body).toContain(a.id)
+    expect(opts).toEqual({ route: "/card", webPath: "/mon-espace?vue=badge" })
     session = { adherentId: b.id, name: "B" } // même navigateur, autre membre
     await POST(req("POST", { token: TOKEN, locale: "fr" }))
     expect(notifyDevice).toHaveBeenCalledTimes(2)

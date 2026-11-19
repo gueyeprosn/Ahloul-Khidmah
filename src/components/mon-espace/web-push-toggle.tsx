@@ -118,7 +118,7 @@ export function WebPushToggle({ variant = "card" }: { variant?: Variant }) {
               </p>
               <p className="mt-0.5 text-sm text-[var(--ak-ink-soft)]">
                 Vous recevrez ici les annonces, vos rappels et vos confirmations. Une notification de
-                test vient de vous être envoyée.
+                bienvenue vient de vous être envoyée : touchez-la pour voir votre badge.
               </p>
             </div>
           </div>

@@ -1,15 +1,12 @@
 import { prisma } from "@/lib/db"
 import { labelPeriode } from "@/lib/periode"
 import { notifyMember, type Localized } from "@/lib/push"
+import { WELCOME_ROUTE, WELCOME_WEB_PATH, welcomeNotification } from "@/lib/welcome-notification"
 
 /**
  * Textes des notifications de paiement. Volontairement SANS montant ni nom :
  * une notification s'affiche sur l'écran verrouillé.
  */
-const ADHESION: Localized = {
-  fr: { title: "Bienvenue chez Ahloul Khidmah", body: "Votre adhésion est confirmée. Votre carte de membre est prête." },
-  ar: { title: "مرحبًا بك في Ahloul Khidmah", body: "تم تأكيد انخراطك. بطاقة العضوية جاهزة." },
-}
 const DON: Localized = {
   fr: { title: "Merci pour votre contribution", body: "Votre contribution a bien été reçue. Que Dieu vous le rende." },
   ar: { title: "شكرًا على مساهمتك", body: "تم استلام مساهمتك. جزاك الله خيرًا." },
@@ -57,7 +54,16 @@ export async function notifyPaymentCompleted(paymentId: string): Promise<void> {
     if (!p?.adherentId) return // don anonyme / visiteur : aucun appareil à joindre
 
     if (p.type === "adhesion") {
-      await notifyMember(p.adherentId, ADHESION, { route: "/card", webPath: "/mon-espace" })
+      const member = await prisma.adherent.findUnique({
+        where: { id: p.adherentId },
+        select: { id: true, prenoms: true, nom: true },
+      })
+      if (member) {
+        await notifyMember(p.adherentId, welcomeNotification(member), {
+          route: WELCOME_ROUTE,
+          webPath: WELCOME_WEB_PATH,
+        })
+      }
     } else if (p.type === "cotisation") {
       await notifyMember(p.adherentId, cotisation(parsePeriodes(p.periodes, p.periode)), {
         route: "/t/cotisations",

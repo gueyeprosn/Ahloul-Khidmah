@@ -58,7 +58,9 @@ describe("notifyPaymentCompleted", () => {
     })
     await notifyPaymentCompleted(adh.id)
     await notifyPaymentCompleted(don.id)
-    expect(notifyMember.mock.calls[0][2]).toMatchObject({ route: "/card" })
+    expect(notifyMember.mock.calls[0][2]).toMatchObject({ route: "/card", webPath: "/mon-espace?vue=badge" })
+    expect(notifyMember.mock.calls[0][1].fr.body).toContain(a.id) // n° de badge dans la bienvenue
+    expect(notifyMember.mock.calls[0][1].fr.body).toContain("TESTNOTIF")
     expect(notifyMember.mock.calls[1][2]).toMatchObject({ route: "/t/home" })
     expect(notifyMember.mock.calls[1][1].ar.title).toBeTruthy()
   })
