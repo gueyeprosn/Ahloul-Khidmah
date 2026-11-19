@@ -3,6 +3,7 @@
 import { PaymentUnavailableDialog } from "@/components/payments/payment-unavailable-dialog"
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
+import { WebPushToggle } from "@/components/mon-espace/web-push-toggle"
 import { useRouter } from "next/navigation"
 import { Loader2, LogOut } from "lucide-react"
 import { MemberCardActions } from "@/components/adhesion/member-card-actions"
@@ -610,6 +611,8 @@ export function MonEspaceClient() {
           {success}
         </p>
       ) : null}
+
+      <WebPushToggle />
 
       {tab === "profil" ? (
         <div className="space-y-6">

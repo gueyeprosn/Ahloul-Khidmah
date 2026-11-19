@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   devIndicators: false,
-  serverExternalPackages: ["@napi-rs/canvas"],
+  serverExternalPackages: ["@napi-rs/canvas", "firebase-admin"],
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [60, 75],

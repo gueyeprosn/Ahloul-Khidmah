@@ -1,5 +1,5 @@
 /* Ahloul Khidmah — Service Worker (cache réseau + assets) */
-const CACHE_VERSION = "ak-v7"
+const CACHE_VERSION = "ak-v8"
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const PAGE_CACHE = `${CACHE_VERSION}-pages`
 
@@ -135,4 +135,52 @@ self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") {
     self.skipWaiting()
   }
+})
+
+/* ---- Notifications push (FCM) ------------------------------------------ */
+
+/** Chemin interne uniquement : une notification ne doit jamais ouvrir un site tiers. */
+function safeNotificationPath(raw) {
+  if (typeof raw !== "string") return "/mon-espace"
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "/mon-espace"
+  return /^\/[A-Za-z0-9/_\-.?=&]*$/.test(raw) ? raw : "/mon-espace"
+}
+
+self.addEventListener("push", (event) => {
+  let payload = {}
+  try {
+    payload = event.data ? event.data.json() : {}
+  } catch {
+    return
+  }
+  // FCM envoie { notification: { title, body }, data: { … } } ; on accepte aussi data seul.
+  const n = payload.notification || {}
+  const d = payload.data || {}
+  const title = n.title || d.title || "Ahloul Khidmah"
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: n.body || d.body || "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { path: safeNotificationPath(d.url) },
+    })
+  )
+})
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close()
+  const target = new URL(
+    safeNotificationPath(event.notification.data && event.notification.data.path),
+    self.location.origin
+  ).href
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (new URL(client.url).origin === self.location.origin && "focus" in client) {
+          return client.navigate(target).then((c) => (c || client).focus())
+        }
+      }
+      return self.clients.openWindow(target)
+    })
+  )
 })

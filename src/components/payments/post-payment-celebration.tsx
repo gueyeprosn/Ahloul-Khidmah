@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CheckCircle2, Loader2, X } from "lucide-react"
 import { PinSetupForm } from "@/components/mon-espace/pin-setup-form"
+import { WebPushToggle } from "@/components/mon-espace/web-push-toggle"
 
 type Props = {
   paymentId: string
@@ -120,6 +121,12 @@ export function PostPaymentCelebration({ paymentId, kind, onClose }: Props) {
               <p className="mt-5 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
                 Code enregistré — votre espace membre est prêt.
               </p>
+            ) : null}
+
+            {claimed ? (
+              <div className="mt-4 text-start">
+                <WebPushToggle />
+              </div>
             ) : null}
 
             <button

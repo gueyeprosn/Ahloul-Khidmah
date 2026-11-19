@@ -23,6 +23,7 @@ export type AuditAction =
   | "store.collection_toggle"
   | "store.collection_product_add"
   | "store.collection_product_remove"
+  | "push.send"
 
 /**
  * Trace une action sensible dans le journal d'activité. N'échoue jamais

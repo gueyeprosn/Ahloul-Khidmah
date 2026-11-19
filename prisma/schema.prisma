@@ -145,6 +145,8 @@ model Payment {
   // JSON formulaire adhésion light — création adhérent après paiement
   adhesionDraft  String?
   rawPayload     String? // JSON
+  /// Notification push de confirmation déjà envoyée (anti-doublon).
+  pushNotifiedAt DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
