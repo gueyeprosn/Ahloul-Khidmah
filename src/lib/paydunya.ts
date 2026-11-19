@@ -93,6 +93,35 @@ export function siteOrigin() {
   )
 }
 
+/**
+ * PayDunya envoie l'IPN en `application/x-www-form-urlencoded` avec des clés
+ * « PHP » imbriquées : `data[hash]`, `data[invoice][token]`,
+ * `data[custom_data][payment_id]`… (et non un champ `data` contenant du JSON).
+ * Reconstruit l'objet imbriqué. Les clés dangereuses sont ignorées
+ * (prototype pollution).
+ */
+export function parseNestedForm(
+  entries: Iterable<[string, unknown]>
+): Record<string, unknown> {
+  const FORBIDDEN = new Set(["__proto__", "prototype", "constructor"])
+  const root: Record<string, unknown> = {}
+  for (const [rawKey, value] of entries) {
+    const parts = rawKey
+      .replace(/\]/g, "")
+      .split("[")
+      .map((p) => p.trim())
+    if (parts.length === 0 || parts.some((p) => p === "" || FORBIDDEN.has(p))) continue
+    let node = root
+    for (let i = 0; i < parts.length - 1; i++) {
+      const next = node[parts[i]]
+      if (typeof next !== "object" || next === null) node[parts[i]] = {}
+      node = node[parts[i]] as Record<string, unknown>
+    }
+    node[parts[parts.length - 1]] = typeof value === "string" ? value : String(value)
+  }
+  return root
+}
+
 export function verifyPaydunyaHash(hash: string | undefined | null) {
   const master = process.env.PAYDUNYA_MASTER_KEY
   if (!master || !hash) return false

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { completePaymentByToken } from "@/lib/payments"
 import { completeStoreOrderByToken } from "@/lib/store/checkout"
-import { diagnoseIpnHash, verifyPaydunyaHash } from "@/lib/paydunya"
+import { diagnoseIpnHash, parseNestedForm, verifyPaydunyaHash } from "@/lib/paydunya"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
 
 /**
@@ -27,9 +27,12 @@ export async function POST(request: Request) {
       const form = await request.formData()
       const dataField = form.get("data")
       if (typeof dataField === "string") {
+        // Variante : un champ « data » contenant du JSON.
         rawData = JSON.parse(dataField)
       } else {
-        rawData = Object.fromEntries(form.entries())
+        // Format réel de PayDunya : clés imbriquées data[hash], data[invoice][token]…
+        const nested = parseNestedForm(form.entries())
+        rawData = nested.data ?? nested
       }
     }
 

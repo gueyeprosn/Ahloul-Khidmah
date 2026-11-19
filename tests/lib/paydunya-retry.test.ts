@@ -69,3 +69,38 @@ describe("diagnoseIpnHash", () => {
     expect(JSON.stringify(d)).not.toContain("master-x")
   })
 })
+
+import { parseNestedForm } from "@/lib/paydunya"
+
+describe("parseNestedForm — format réel des IPN PayDunya", () => {
+  it("reconstruit data[hash], data[invoice][token] et data[custom_data][payment_id]", () => {
+    const parsed = parseNestedForm([
+      ["data[response_code]", "00"],
+      ["data[hash]", "abc123"],
+      ["data[invoice][token]", "tok1"],
+      ["data[invoice][total_amount]", "1400"],
+      ["data[custom_data][payment_id]", "pay1"],
+      ["data[status]", "completed"],
+    ]) as { data: { hash: string; status: string; invoice: { token: string; total_amount: string }; custom_data: { payment_id: string } } }
+    expect(parsed.data.hash).toBe("abc123")
+    expect(parsed.data.status).toBe("completed")
+    expect(parsed.data.invoice).toEqual({ token: "tok1", total_amount: "1400" })
+    expect(parsed.data.custom_data.payment_id).toBe("pay1")
+  })
+
+  it("ignore les clés dangereuses (prototype pollution)", () => {
+    const parsed = parseNestedForm([
+      ["__proto__[polluted]", "x"],
+      ["data[__proto__][polluted]", "x"],
+      ["data[constructor][prototype][polluted]", "x"],
+      ["data[ok]", "1"],
+    ]) as { data: Record<string, unknown> }
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+    expect(parsed.data.ok).toBe("1")
+    expect(Object.keys(parsed.data)).toEqual(["ok"])
+  })
+
+  it("clés simples inchangées ; clés vides ignorées", () => {
+    expect(parseNestedForm([["a", "1"], ["", "x"], ["b[]", "y"]])).toEqual({ a: "1" })
+  })
+})
