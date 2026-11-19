@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { Play, Minus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/landing/locale-provider"
@@ -12,6 +12,20 @@ import {
 } from "@/lib/youtube-widget-config"
 
 const DISMISS_KEY = "ak_yt_dismiss"
+
+/**
+ * Le lecteur flottant n'existe que sur grand écran (≥ 768 px). Sur téléphone
+ * il recouvrait le contenu et gênait la navigation : il n'est pas du tout
+ * affiché (donc rien n'est chargé non plus).
+ */
+const DESKTOP_QUERY = "(min-width: 768px)"
+function subscribeDesktop(onChange: () => void) {
+  const mq = window.matchMedia(DESKTOP_QUERY)
+  mq.addEventListener("change", onChange)
+  return () => mq.removeEventListener("change", onChange)
+}
+const isDesktopNow = () => window.matchMedia(DESKTOP_QUERY).matches
+const isDesktopOnServer = () => false
 
 /**
  * Petit disque façon vinyle — tourne pendant la lecture (assumée dès
@@ -50,6 +64,7 @@ function VinylDisc({ spinning, size = 16 }: { spinning: boolean; size?: number }
 
 export function YoutubeWidget() {
   const { dict } = useLocale()
+  const isDesktop = useSyncExternalStore(subscribeDesktop, isDesktopNow, isDesktopOnServer)
   const [closed, setClosed] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [activated, setActivated] = useState(false)
@@ -94,7 +109,7 @@ export function YoutubeWidget() {
     setActivated(false)
   }
 
-  if (closed) return null
+  if (closed || !isDesktop) return null
 
   return (
     <div

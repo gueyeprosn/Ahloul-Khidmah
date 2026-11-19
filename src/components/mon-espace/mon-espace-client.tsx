@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { WebPushToggle } from "@/components/mon-espace/web-push-toggle"
 import { useRouter } from "next/navigation"
-import { Loader2, LogOut } from "lucide-react"
+import { Camera, Loader2, LogOut } from "lucide-react"
 import { MemberCardActions } from "@/components/adhesion/member-card-actions"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { MemberPhotoUpload } from "@/components/mon-espace/member-photo-upload"
@@ -486,44 +486,74 @@ export function MonEspaceClient() {
         message={unavailable}
         onClose={() => setUnavailable(null)}
       />
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--ak-gold)] bg-[#E8F0EA]">
-            {member.photoUrl && !avatarBroken ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={member.photoUrl}
-                src={member.photoUrl}
-                alt=""
-                className="h-full w-full object-cover object-center"
-                onError={() => setAvatarBroken(true)}
-              />
-            ) : (
-              <span className="font-[family-name:var(--font-amiri)] text-lg text-[var(--ak-emerald-deep)]">
-                {`${member.prenoms.charAt(0)}${member.nom.charAt(0)}`.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--ak-ink-soft)]">
-              Connecté
-            </p>
-            <p className="font-[family-name:var(--font-amiri)] text-xl text-[var(--ak-emerald-deep)]">
-              {member.name}
-            </p>
-            <p className="mt-0.5 font-mono text-sm text-[var(--ak-ink-soft)]">
-              {member.id}
-            </p>
-          </div>
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => void onLogout()}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ak-gold)]/50 px-3 py-1.5 text-xs font-medium text-[var(--ak-emerald-deep)]"
+          >
+            <LogOut className="size-3.5" />
+            Déconnexion
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void onLogout()}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ak-gold)]/50 px-3 py-1.5 text-xs font-medium text-[var(--ak-emerald-deep)]"
-        >
-          <LogOut className="size-3.5" />
-          Déconnexion
-        </button>
+
+        <div className="flex flex-col items-center text-center">
+          <div className="relative">
+            <div className="flex size-28 items-center justify-center overflow-hidden rounded-full border-[3px] border-[var(--ak-gold)] bg-[#E8F0EA] shadow-[0_0_0_6px_rgba(201,162,76,0.15)]">
+              {member.photoUrl && !avatarBroken ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={member.photoUrl}
+                  src={member.photoUrl}
+                  alt={`Photo de ${member.name}`}
+                  className="h-full w-full object-cover object-center"
+                  onError={() => setAvatarBroken(true)}
+                />
+              ) : (
+                <span className="font-[family-name:var(--font-amiri)] text-3xl text-[var(--ak-emerald-deep)]">
+                  {`${member.prenoms.charAt(0)}${member.nom.charAt(0)}`.toUpperCase()}
+                </span>
+              )}
+              {photoUploading ? (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-white/70">
+                  <Loader2 className="size-6 animate-spin text-[var(--ak-emerald-deep)]" />
+                </span>
+              ) : null}
+            </div>
+            {/* Appareil photo ou galerie : un seul bouton, le téléphone propose les deux. */}
+            <label
+              className="absolute -right-1 -bottom-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[var(--ak-emerald-deep)] text-white shadow-md"
+              aria-label={member.photoUrl ? "Changer ma photo" : "Ajouter ma photo"}
+            >
+              <Camera className="size-5" aria-hidden />
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                disabled={photoUploading}
+                onChange={(e) => void onPhotoSelected(e)}
+              />
+            </label>
+          </div>
+
+          <p className="mt-4 font-[family-name:var(--font-amiri)] text-2xl text-[var(--ak-emerald-deep)]">
+            {member.name}
+          </p>
+          <p className="mt-0.5 font-mono text-sm text-[var(--ak-ink-soft)]">
+            {member.id}
+          </p>
+          {!member.photoUrl ? (
+            <p className="mt-2 text-xs text-[var(--ak-ink-soft)]">
+              Ajoutez votre photo : elle apparaîtra sur votre carte membre.
+            </p>
+          ) : null}
+          {photoError ? (
+            <p className="mt-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-800">
+              {photoError}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {!member.ficheComplete ? (
