@@ -19,6 +19,7 @@ type Props = {
   photoUploading: boolean
   photoError: string | null
   onPhotoSelected: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onOpenPhoto?: () => void
   onClose: () => void
 }
 
@@ -30,6 +31,7 @@ export function BadgeFullscreen({
   photoUploading,
   photoError,
   onPhotoSelected,
+  onOpenPhoto,
   onClose,
 }: Props) {
   return (
@@ -60,6 +62,7 @@ export function BadgeFullscreen({
             uploading={photoUploading}
             error={photoError}
             onSelected={onPhotoSelected}
+            onOpen={onOpenPhoto}
             compact
           />
         </div>

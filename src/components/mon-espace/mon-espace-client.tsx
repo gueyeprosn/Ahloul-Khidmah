@@ -9,6 +9,7 @@ import { Camera, Loader2, LogOut } from "lucide-react"
 import { MemberCardActions } from "@/components/adhesion/member-card-actions"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { MemberPhotoUpload } from "@/components/mon-espace/member-photo-upload"
+import { PhotoFlow } from "@/components/mon-espace/photo-flow"
 import { BadgeFullscreen } from "@/components/mon-espace/badge-fullscreen"
 import { PinSetupForm } from "@/components/mon-espace/pin-setup-form"
 import { PhoneInput } from "@/components/shared/phone-input"
@@ -88,6 +89,7 @@ export function MonEspaceClient() {
   const router = useRouter()
 
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoFlowOpen, setPhotoFlowOpen] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [avatarBroken, setAvatarBroken] = useState(false)
 
@@ -333,10 +335,16 @@ export function MonEspaceClient() {
     }
   }
 
+  /** Ancien chemin (sans recadrage) : conservé en secours pour les formats illisibles. */
   async function onPhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file) return
+    await uploadPhoto(file)
+  }
+
+  /** Reçoit la photo déjà recadrée (ou, en secours, l'originale) et l'envoie. */
+  async function uploadPhoto(file: File) {
     setPhotoError(null)
     setPhotoUploading(true)
     try {
@@ -370,6 +378,7 @@ export function MonEspaceClient() {
           : null
       setMember((m) => (m ? { ...m, photoUrl: photoUrl || data.photoUrl } : m))
       setAvatarBroken(false)
+      router.refresh() // met à jour la photo dans la barre de navigation
       setSuccess("Photo enregistrée — elle apparaît sur votre carte.")
       setTab("carte")
     } catch (err) {
@@ -457,6 +466,7 @@ export function MonEspaceClient() {
 
   if (fullscreenBadge) {
     return (
+      <>
       <BadgeFullscreen
         member={{
           id: member.id,
@@ -472,11 +482,19 @@ export function MonEspaceClient() {
         photoUploading={photoUploading}
         photoError={photoError}
         onPhotoSelected={(e) => void onPhotoSelected(e)}
+        onOpenPhoto={() => setPhotoFlowOpen(true)}
         onClose={() => {
           setFullscreenBadge(false)
           window.history.replaceState(null, "", "/mon-espace")
         }}
       />
+      <PhotoFlow
+        open={photoFlowOpen}
+        onClose={() => setPhotoFlowOpen(false)}
+        onPhoto={(file) => void uploadPhoto(file)}
+        onUnreadable={(file) => void uploadPhoto(file)}
+      />
+      </>
     )
   }
 
@@ -485,6 +503,12 @@ export function MonEspaceClient() {
       <PaymentUnavailableDialog
         message={unavailable}
         onClose={() => setUnavailable(null)}
+      />
+      <PhotoFlow
+        open={photoFlowOpen}
+        onClose={() => setPhotoFlowOpen(false)}
+        onPhoto={(file) => void uploadPhoto(file)}
+        onUnreadable={(file) => void uploadPhoto(file)}
       />
       <div className="space-y-3">
         <div className="flex justify-end">
@@ -521,20 +545,15 @@ export function MonEspaceClient() {
                 </span>
               ) : null}
             </div>
-            {/* Appareil photo ou galerie : un seul bouton, le téléphone propose les deux. */}
-            <label
-              className="absolute -right-1 -bottom-1 flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[var(--ak-emerald-deep)] text-white shadow-md"
+            <button
+              type="button"
+              onClick={() => setPhotoFlowOpen(true)}
+              disabled={photoUploading}
+              className="absolute -right-1 -bottom-1 flex size-10 items-center justify-center rounded-full border-2 border-white bg-[var(--ak-emerald-deep)] text-white shadow-md disabled:opacity-60"
               aria-label={member.photoUrl ? "Changer ma photo" : "Ajouter ma photo"}
             >
               <Camera className="size-5" aria-hidden />
-              <input
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                disabled={photoUploading}
-                onChange={(e) => void onPhotoSelected(e)}
-              />
-            </label>
+            </button>
           </div>
 
           <p className="mt-4 font-[family-name:var(--font-amiri)] text-2xl text-[var(--ak-emerald-deep)]">
@@ -737,6 +756,7 @@ export function MonEspaceClient() {
             uploading={photoUploading}
             error={photoError}
             onSelected={(e) => void onPhotoSelected(e)}
+            onOpen={() => setPhotoFlowOpen(true)}
           />
         ) : null}
 
@@ -759,6 +779,7 @@ export function MonEspaceClient() {
             uploading={photoUploading}
             error={photoError}
             onSelected={(e) => void onPhotoSelected(e)}
+            onOpen={() => setPhotoFlowOpen(true)}
             compact
           />
           <div className="rounded-2xl border border-[var(--ak-gold)]/45 bg-white p-5 shadow-[0_12px_36px_rgba(11,58,37,0.08)]">

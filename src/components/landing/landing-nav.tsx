@@ -23,7 +23,13 @@ function hasDarkHero(pathname: string) {
   return false
 }
 
-export function LandingNav({ isMember = false }: { isMember?: boolean }) {
+export function LandingNav({
+  isMember = false,
+  member = null,
+}: {
+  isMember?: boolean
+  member?: { name: string; photoUrl: string | null } | null
+}) {
   const { dict, locale, setLocale } = useLocale()
   const { itemCount, openDrawer } = useCart()
   const pathname = usePathname()
@@ -184,6 +190,34 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
               </button>
             </>
           )}
+
+          {isMember ? (
+            <Link
+              href="/mon-espace"
+              onClick={() => setOpen(false)}
+              aria-label={`Mon espace — ${member?.name ?? "membre connecté"}`}
+              title={member?.name}
+              className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--ak-gold)] bg-[#E8F0EA] text-sm font-semibold text-[var(--ak-emerald-deep)]"
+            >
+              {member?.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={member.photoUrl}
+                  alt=""
+                  className="size-full object-cover object-center"
+                />
+              ) : (
+                <span aria-hidden>
+                  {(member?.name ?? "M")
+                    .split(/\s+/)
+                    .map((w) => w.charAt(0))
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
+                </span>
+              )}
+            </Link>
+          ) : null}
 
           {!isMember ? (
             <>
