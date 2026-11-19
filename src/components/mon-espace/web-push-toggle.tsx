@@ -5,6 +5,7 @@ import { Bell, BellOff, Loader2 } from "lucide-react"
 import {
   disableWebPush,
   enableWebPush,
+  refreshWebPushRegistration,
   webPushConfigured,
   webPushStoredToken,
   webPushSupported,
@@ -28,7 +29,11 @@ export function WebPushToggle() {
         return
       }
       if (Notification.permission === "denied") setView("denied")
-      else setView(Notification.permission === "granted" && webPushStoredToken() ? "on" : "off")
+      else if (Notification.permission === "granted" && webPushStoredToken()) {
+        setView("on")
+        // Rattache ce navigateur au membre connecté (idempotent côté serveur).
+        void refreshWebPushRegistration(document.documentElement.lang === "ar" ? "ar" : "fr")
+      } else setView("off")
     }, 0)
     return () => clearTimeout(timer)
   }, [])

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db"
 
 let session: { adherentId: string; name: string } | null = null
 vi.mock("@/lib/member-auth", () => ({ getMemberSession: async () => session }))
+const notifyDevice = vi.fn(async () => true)
+vi.mock("@/lib/push", () => ({ notifyDevice: (...a: unknown[]) => (notifyDevice as unknown as (...x: unknown[]) => unknown)(...a) }))
 
 import { DELETE, POST } from "@/app/api/mon-espace/push/route"
 
@@ -17,6 +19,7 @@ const req = (method: string, body: unknown) =>
 describe("/api/mon-espace/push", () => {
   beforeEach(async () => {
     session = null
+    notifyDevice.mockClear()
     await prisma.deviceToken.deleteMany({ where: { token: { startsWith: "TESTPUSHWEB-" } } })
   })
 
@@ -50,6 +53,19 @@ describe("/api/mon-espace/push", () => {
     session = { adherentId: a.id, name: "A" }
     await DELETE(req("DELETE", { token: TOKEN }))
     expect(await prisma.deviceToken.count({ where: { token: TOKEN } })).toBe(0)
+  })
+
+  it("confirme l'activation une seule fois (pas à chaque rafraîchissement)", async () => {
+    const [a, b] = await prisma.adherent.findMany({ select: { id: true }, take: 2 })
+    if (!a || !b) return
+    session = { adherentId: a.id, name: "A" }
+    await POST(req("POST", { token: TOKEN, locale: "ar" }))
+    await POST(req("POST", { token: TOKEN, locale: "ar" })) // rafraîchissement : rien de plus
+    expect(notifyDevice).toHaveBeenCalledTimes(1)
+    expect((notifyDevice.mock.calls[0] as unknown[]).slice(0, 2)).toEqual([TOKEN, "ar"])
+    session = { adherentId: b.id, name: "B" } // même navigateur, autre membre
+    await POST(req("POST", { token: TOKEN, locale: "fr" }))
+    expect(notifyDevice).toHaveBeenCalledTimes(2)
   })
 
   it("rejette un jeton invalide", async () => {

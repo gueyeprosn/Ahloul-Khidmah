@@ -111,3 +111,24 @@ export async function disableWebPush(): Promise<void> {
     }
   }
 }
+
+/**
+ * Ré-enregistre le jeton déjà obtenu auprès de la session membre courante :
+ * rattache ce navigateur au membre connecté (changement de compte, première
+ * connexion après une adhésion). Sans effet si aucun jeton n'est stocké.
+ */
+export async function refreshWebPushRegistration(locale: "fr" | "ar" = "fr"): Promise<boolean> {
+  const token = webPushStoredToken()
+  if (!token) return false
+  try {
+    const res = await fetch("/api/mon-espace/push", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, locale }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

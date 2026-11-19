@@ -165,3 +165,23 @@ export async function notifyMember(
     return null
   }
 }
+
+/**
+ * Message à UN appareil précis (ex. confirmation « notifications activées »),
+ * dans sa langue. Ne lève jamais.
+ */
+export async function notifyDevice(
+  token: string,
+  locale: string | null | undefined,
+  content: Localized,
+  opts: { route?: string | null; webPath?: string | null } = {}
+): Promise<boolean> {
+  try {
+    if (!pushConfigured()) return false
+    const res = await deliver([token], { ...(locale === "ar" ? content.ar : content.fr), ...opts })
+    return res.sent > 0
+  } catch (e) {
+    console.error("notifyDevice", e)
+    return false
+  }
+}

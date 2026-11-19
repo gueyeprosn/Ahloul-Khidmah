@@ -3,6 +3,18 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { getMemberSession } from "@/lib/member-auth"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
+import { notifyDevice, type Localized } from "@/lib/push"
+
+const ACTIVATED: Localized = {
+  fr: {
+    title: "Notifications activées",
+    body: "Vous recevrez ici la confirmation de vos paiements et vos rappels.",
+  },
+  ar: {
+    title: "تم تفعيل الإشعارات",
+    body: "ستصلك هنا تأكيدات دفعاتك وتذكيراتك.",
+  },
+}
 
 const tokenSchema = z.object({ token: z.string().min(10).max(4096) })
 const registerSchema = tokenSchema.extend({ locale: z.enum(["fr", "ar"]).optional() })
@@ -21,11 +33,20 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 })
   const { token, locale } = parsed.data
 
+  const before = await prisma.deviceToken.findUnique({
+    where: { token },
+    select: { adherentId: true },
+  })
   await prisma.deviceToken.upsert({
     where: { token },
     create: { token, platform: "web", locale, adherentId: session.adherentId },
     update: { platform: "web", locale, adherentId: session.adherentId, lastSeenAt: new Date() },
   })
+  // Première liaison de cet appareil à ce membre : message de confirmation
+  // (preuve immédiate que ça marche). Pas pour un simple rafraîchissement.
+  if (before?.adherentId !== session.adherentId) {
+    void notifyDevice(token, locale, ACTIVATED, { webPath: "/mon-espace" })
+  }
   return NextResponse.json({ ok: true })
 }
 

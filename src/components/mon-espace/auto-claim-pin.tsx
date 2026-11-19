@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { PinSetupForm } from "@/components/mon-espace/pin-setup-form"
+import { WebPushToggle } from "@/components/mon-espace/web-push-toggle"
 
 /**
  * Utilisé sur /paiement/retour (le visiteur a quitté puis est revenu sur le
@@ -67,15 +68,19 @@ export function AutoClaimPin({ paymentId }: { paymentId: string }) {
 
   if (pinDone) {
     return (
-      <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-        Code enregistré — votre espace membre est prêt.
-      </p>
+      <div className="space-y-3 text-start">
+        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Code enregistré — votre espace membre est prêt.
+        </p>
+        <WebPushToggle />
+      </div>
     )
   }
 
   return (
-    <div className="text-start">
+    <div className="space-y-4 text-start">
       <PinSetupForm autoFocus onSaved={() => setPinDone(true)} />
+      <WebPushToggle />
     </div>
   )
 }
