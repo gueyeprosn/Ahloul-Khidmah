@@ -19,7 +19,7 @@ const FOOTER_LINKS = [
   { href: "/faq", key: "faq" as const },
 ]
 
-export function LandingFooter() {
+export function LandingFooter({ isMember = false }: { isMember?: boolean }) {
   const { dict } = useLocale()
 
   return (
@@ -82,7 +82,7 @@ export function LandingFooter() {
       </div>
 
       <div className="mx-auto mt-12 flex max-w-6xl flex-wrap gap-6 border-t border-white/10 pt-8 text-sm text-[var(--ak-ivory)]/45">
-        {FOOTER_LINKS.map((link) => (
+        {FOOTER_LINKS.filter((link) => !(isMember && link.key === "adhesion")).map((link) => (
           <Link
             key={link.href}
             href={link.href}

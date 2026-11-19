@@ -74,7 +74,7 @@ export default async function MarketingLayout({
         >
           <LandingNav isMember={Boolean(memberSession)} member={memberChip} />
           <main>{children}</main>
-          <LandingFooter />
+          <LandingFooter isMember={Boolean(memberSession)} />
         </div>
         <StoreCartDrawer />
         <StoreSearchPalette />
