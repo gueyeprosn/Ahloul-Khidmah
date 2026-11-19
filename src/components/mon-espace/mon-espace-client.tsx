@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { WebPushToggle } from "@/components/mon-espace/web-push-toggle"
 import { useRouter } from "next/navigation"
-import { Camera, Loader2, LogOut } from "lucide-react"
+import { Camera, IdCard, Loader2, LogOut, Receipt, UserRound, Wallet } from "lucide-react"
 import { MemberCardActions } from "@/components/adhesion/member-card-actions"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { MemberPhotoUpload } from "@/components/mon-espace/member-photo-upload"
@@ -603,51 +603,35 @@ export function MonEspaceClient() {
         </div>
       ) : null}
 
-      <div className="flex gap-2 rounded-full bg-[var(--ak-emerald-deep)]/5 p-1">
-        <button
-          type="button"
-          onClick={() => setTab("profil")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "profil"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Mon profil
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("carte")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "carte"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Ma carte
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("versements")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "versements"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Versements
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("wallet")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "wallet"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Portefeuille
-        </button>
+      <div
+        role="tablist"
+        aria-label="Sections de mon espace"
+        className="grid grid-cols-2 gap-2 rounded-2xl bg-[var(--ak-emerald-deep)]/5 p-1.5 sm:grid-cols-4"
+      >
+        {(
+          [
+            ["profil", "Mon profil", UserRound],
+            ["carte", "Ma carte", IdCard],
+            ["versements", "Versements", Receipt],
+            ["wallet", "Portefeuille", Wallet],
+          ] as const
+        ).map(([id, label, Icon]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+              tab === id
+                ? "bg-[var(--ak-emerald-deep)] text-white shadow-sm"
+                : "text-[var(--ak-emerald-deep)] hover:bg-[var(--ak-emerald-deep)]/10"
+            }`}
+          >
+            <Icon className="size-4 shrink-0" aria-hidden />
+            <span className="whitespace-nowrap">{label}</span>
+          </button>
+        ))}
       </div>
 
       {error ? (
