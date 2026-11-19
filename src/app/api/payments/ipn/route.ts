@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { completePaymentByToken } from "@/lib/payments"
 import { completeStoreOrderByToken } from "@/lib/store/checkout"
-import { verifyPaydunyaHash } from "@/lib/paydunya"
+import { diagnoseIpnHash, parseNestedForm, verifyPaydunyaHash } from "@/lib/paydunya"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
 
 /**
@@ -27,9 +27,12 @@ export async function POST(request: Request) {
       const form = await request.formData()
       const dataField = form.get("data")
       if (typeof dataField === "string") {
+        // Variante : un champ « data » contenant du JSON.
         rawData = JSON.parse(dataField)
       } else {
-        rawData = Object.fromEntries(form.entries())
+        // Format réel de PayDunya : clés imbriquées data[hash], data[invoice][token]…
+        const nested = parseNestedForm(form.entries())
+        rawData = nested.data ?? nested
       }
     }
 
@@ -40,7 +43,34 @@ export async function POST(request: Request) {
 
     const hash = String(payload.hash || "")
     if (!verifyPaydunyaHash(hash)) {
-      console.error("PayDunya IPN: hash invalide")
+      const badInvoice = payload.invoice as { token?: string } | undefined
+      const badToken = String(badInvoice?.token || payload.token || "").trim()
+      console.error(
+        "PayDunya IPN: hash invalide",
+        JSON.stringify({ ...diagnoseIpnHash(hash, badToken), keys: Object.keys(payload).slice(0, 12) })
+      )
+
+      // Le contenu de cette notification n'est PAS fiable : on n'en retient
+      // que le jeton de facture, et seulement pour le faire CONFIRMER
+      // directement auprès de PayDunya (serveur à serveur, clés privées).
+      // Sans cela, un membre qui paie puis ferme son navigateur avant le
+      // retour sur le site resterait « en attente » alors qu'il a payé.
+      // Rien du payload (statut, données) n'est écrit en base.
+      const limitedBad = rateLimit(`pay-ipn-bad:${ip}`, 20, 60 * 1000)
+      if (badToken && limitedBad.ok) {
+        const known = await prisma.payment.findFirst({
+          where: { token: badToken },
+          select: { id: true },
+        })
+        if (known) {
+          try {
+            const r = await completePaymentByToken(badToken)
+            if (r.ok) return NextResponse.json({ ok: true, confirmed: true })
+          } catch (e) {
+            console.error("PayDunya IPN (hash invalide) : confirmation impossible", e)
+          }
+        }
+      }
       return NextResponse.json({ error: "hash invalide" }, { status: 403 })
     }
 

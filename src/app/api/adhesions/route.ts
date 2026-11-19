@@ -171,7 +171,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Ce numéro de téléphone est déjà utilisé par un autre adhérent.",
+            "Ce numéro est déjà inscrit : vous êtes déjà membre. Ouvrez « Mon espace » (menu) pour voir vos versements et payer votre cotisation.",
         },
         { status: 409 }
       )

@@ -9,6 +9,8 @@ type Props = {
   uploading: boolean
   error: string | null
   onSelected: (e: React.ChangeEvent<HTMLInputElement>) => void
+  /** Ouvre le parcours photo (appareil photo / galerie + recadrage). */
+  onOpen?: () => void
   compact?: boolean
 }
 
@@ -18,6 +20,7 @@ export function MemberPhotoUpload({
   uploading,
   error,
   onSelected,
+  onOpen,
   compact = false,
 }: Props) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -82,46 +85,60 @@ export function MemberPhotoUpload({
         <div
           className={`flex flex-1 flex-wrap gap-2 ${compact ? "justify-center" : ""}`}
         >
-          <button
-            type="button"
-            onClick={() => cameraInputRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ak-emerald-deep)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
-          >
-            <Camera className="size-3.5" />
-            Prendre une photo
-          </button>
-          <button
-            type="button"
-            onClick={() => galleryInputRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ak-emerald-deep)] px-4 py-2.5 text-xs font-semibold text-[var(--ak-emerald-deep)] disabled:opacity-60"
-          >
-            <ImageIcon className="size-3.5" />
-            Galerie
-          </button>
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            className="hidden"
-            onChange={onSelected}
-          />
-          <input
-            ref={galleryInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={onSelected}
-          />
+          {onOpen ? (
+            <button
+              type="button"
+              onClick={onOpen}
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ak-emerald-deep)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
+            >
+              <Camera className="size-3.5" />
+              {showPhoto ? "Changer ma photo" : "Ajouter ma photo"}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ak-emerald-deep)] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-60"
+              >
+                <Camera className="size-3.5" />
+                Prendre une photo
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ak-emerald-deep)] px-4 py-2.5 text-xs font-semibold text-[var(--ak-emerald-deep)] disabled:opacity-60"
+              >
+                <ImageIcon className="size-3.5" />
+                Galerie
+              </button>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={onSelected}
+              />
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onSelected}
+              />
+            </>
+          )}
         </div>
       </div>
 
       {broken && photoUrl ? (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
           L&apos;aperçu n&apos;a pas pu s&apos;afficher. Réessayez d&apos;envoyer
-          la photo (Galerie).
+          la photo.
         </p>
       ) : null}
 

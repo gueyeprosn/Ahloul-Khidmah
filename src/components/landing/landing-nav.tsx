@@ -23,7 +23,13 @@ function hasDarkHero(pathname: string) {
   return false
 }
 
-export function LandingNav({ isMember = false }: { isMember?: boolean }) {
+export function LandingNav({
+  isMember = false,
+  member = null,
+}: {
+  isMember?: boolean
+  member?: { name: string; photoUrl: string | null } | null
+}) {
   const { dict, locale, setLocale } = useLocale()
   const { itemCount, openDrawer } = useCart()
   const pathname = usePathname()
@@ -46,7 +52,7 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
 
   const links = [
     { href: "/qui-sommes-nous", label: dict.nav.about },
-    { href: "#adhesion", label: dict.nav.adhesion },
+    ...(isMember ? [] : [{ href: "#adhesion", label: dict.nav.adhesion }]),
     { href: "#contribuer", label: dict.nav.contribute },
     ...(STORE_PUBLIC_ENABLED ? [{ href: "/boutique", label: dict.nav.store }] : []),
     { href: "/mediatheque", label: dict.nav.mediatheque },
@@ -89,11 +95,11 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
           : "bg-transparent"
       )}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 md:h-20 md:px-8">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-3 sm:px-5 md:h-20 md:px-8">
         <Link
           href="/"
           aria-label="Retour à l'accueil"
-          className="relative z-10 flex items-center gap-3"
+          className="relative z-10 flex shrink-0 items-center gap-2 sm:gap-3"
           onClick={goHome}
         >
           <Image
@@ -103,7 +109,13 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
             height={36}
             className="size-9 rounded-full object-cover ring-1 ring-[var(--ak-gold)]/50"
           />
-          <span className="font-[family-name:var(--font-amiri)] text-lg tracking-wide text-[var(--ak-ivory)] md:text-xl">
+          {/* Membre connecté sur téléphone : seul le logo reste (la place va à la photo, au badge et au menu). */}
+          <span
+            className={cn(
+              "font-[family-name:var(--font-amiri)] text-lg tracking-wide whitespace-nowrap text-[var(--ak-ivory)] md:text-xl",
+              isMember && "hidden sm:inline"
+            )}
+          >
             Ahloul Khidmah
           </span>
         </Link>
@@ -120,7 +132,7 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
           ))}
         </nav>
 
-        <div className="relative z-10 flex items-center gap-2 sm:gap-3">
+        <div className="relative z-10 flex items-center gap-1.5 sm:gap-3">
           <div
             className="flex items-center rounded-xl border border-white/20 bg-white/5 p-0.5 text-xs font-semibold"
             role="group"
@@ -130,7 +142,7 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
               type="button"
               onClick={() => switchLocale("fr")}
               className={cn(
-                "rounded-lg px-2.5 py-1.5 transition-colors",
+                "rounded-lg px-2 py-1.5 transition-colors sm:px-2.5",
                 locale === "fr"
                   ? "bg-[var(--ak-gold)] text-[var(--ak-emerald-deep)]"
                   : "text-[var(--ak-ivory)]/70 hover:text-[var(--ak-ivory)]"
@@ -142,7 +154,7 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
               type="button"
               onClick={() => switchLocale("ar")}
               className={cn(
-                "rounded-lg px-2.5 py-1.5 font-[family-name:var(--font-amiri)] transition-colors",
+                "rounded-lg px-2 py-1.5 sm:px-2.5 font-[family-name:var(--font-amiri)] transition-colors",
                 locale === "ar"
                   ? "bg-[var(--ak-gold)] text-[var(--ak-emerald-deep)]"
                   : "text-[var(--ak-ivory)]/70 hover:text-[var(--ak-ivory)]"
@@ -184,6 +196,34 @@ export function LandingNav({ isMember = false }: { isMember?: boolean }) {
               </button>
             </>
           )}
+
+          {isMember ? (
+            <Link
+              href="/mon-espace"
+              onClick={() => setOpen(false)}
+              aria-label={`Mon espace — ${member?.name ?? "membre connecté"}`}
+              title={member?.name}
+              className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--ak-gold)] bg-[#E8F0EA] text-sm font-semibold text-[var(--ak-emerald-deep)]"
+            >
+              {member?.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={member.photoUrl}
+                  alt=""
+                  className="size-full object-cover object-center"
+                />
+              ) : (
+                <span aria-hidden>
+                  {(member?.name ?? "M")
+                    .split(/\s+/)
+                    .map((w) => w.charAt(0))
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
+                </span>
+              )}
+            </Link>
+          ) : null}
 
           {!isMember ? (
             <>

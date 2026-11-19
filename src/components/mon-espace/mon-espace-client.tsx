@@ -5,10 +5,12 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { WebPushToggle } from "@/components/mon-espace/web-push-toggle"
 import { useRouter } from "next/navigation"
-import { Loader2, LogOut } from "lucide-react"
+import { Camera, IdCard, Loader2, LogOut, Receipt, UserRound, Wallet } from "lucide-react"
 import { MemberCardActions } from "@/components/adhesion/member-card-actions"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { MemberPhotoUpload } from "@/components/mon-espace/member-photo-upload"
+import { PhotoFlow } from "@/components/mon-espace/photo-flow"
+import { MemberContributeForm } from "@/components/contribute/member-contribute-form"
 import { BadgeFullscreen } from "@/components/mon-espace/badge-fullscreen"
 import { PinSetupForm } from "@/components/mon-espace/pin-setup-form"
 import { PhoneInput } from "@/components/shared/phone-input"
@@ -88,6 +90,7 @@ export function MonEspaceClient() {
   const router = useRouter()
 
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoFlowOpen, setPhotoFlowOpen] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [avatarBroken, setAvatarBroken] = useState(false)
 
@@ -333,10 +336,16 @@ export function MonEspaceClient() {
     }
   }
 
+  /** Ancien chemin (sans recadrage) : conservé en secours pour les formats illisibles. */
   async function onPhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file) return
+    await uploadPhoto(file)
+  }
+
+  /** Reçoit la photo déjà recadrée (ou, en secours, l'originale) et l'envoie. */
+  async function uploadPhoto(file: File) {
     setPhotoError(null)
     setPhotoUploading(true)
     try {
@@ -370,6 +379,7 @@ export function MonEspaceClient() {
           : null
       setMember((m) => (m ? { ...m, photoUrl: photoUrl || data.photoUrl } : m))
       setAvatarBroken(false)
+      router.refresh() // met à jour la photo dans la barre de navigation
       setSuccess("Photo enregistrée — elle apparaît sur votre carte.")
       setTab("carte")
     } catch (err) {
@@ -457,6 +467,7 @@ export function MonEspaceClient() {
 
   if (fullscreenBadge) {
     return (
+      <>
       <BadgeFullscreen
         member={{
           id: member.id,
@@ -472,11 +483,19 @@ export function MonEspaceClient() {
         photoUploading={photoUploading}
         photoError={photoError}
         onPhotoSelected={(e) => void onPhotoSelected(e)}
+        onOpenPhoto={() => setPhotoFlowOpen(true)}
         onClose={() => {
           setFullscreenBadge(false)
           window.history.replaceState(null, "", "/mon-espace")
         }}
       />
+      <PhotoFlow
+        open={photoFlowOpen}
+        onClose={() => setPhotoFlowOpen(false)}
+        onPhoto={(file) => void uploadPhoto(file)}
+        onUnreadable={(file) => void uploadPhoto(file)}
+      />
+      </>
     )
   }
 
@@ -486,44 +505,75 @@ export function MonEspaceClient() {
         message={unavailable}
         onClose={() => setUnavailable(null)}
       />
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--ak-gold)] bg-[#E8F0EA]">
-            {member.photoUrl && !avatarBroken ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={member.photoUrl}
-                src={member.photoUrl}
-                alt=""
-                className="h-full w-full object-cover object-center"
-                onError={() => setAvatarBroken(true)}
-              />
-            ) : (
-              <span className="font-[family-name:var(--font-amiri)] text-lg text-[var(--ak-emerald-deep)]">
-                {`${member.prenoms.charAt(0)}${member.nom.charAt(0)}`.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--ak-ink-soft)]">
-              Connecté
-            </p>
-            <p className="font-[family-name:var(--font-amiri)] text-xl text-[var(--ak-emerald-deep)]">
-              {member.name}
-            </p>
-            <p className="mt-0.5 font-mono text-sm text-[var(--ak-ink-soft)]">
-              {member.id}
-            </p>
-          </div>
+      <PhotoFlow
+        open={photoFlowOpen}
+        onClose={() => setPhotoFlowOpen(false)}
+        onPhoto={(file) => void uploadPhoto(file)}
+        onUnreadable={(file) => void uploadPhoto(file)}
+      />
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => void onLogout()}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ak-gold)]/50 px-3 py-1.5 text-xs font-medium text-[var(--ak-emerald-deep)]"
+          >
+            <LogOut className="size-3.5" />
+            Déconnexion
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void onLogout()}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ak-gold)]/50 px-3 py-1.5 text-xs font-medium text-[var(--ak-emerald-deep)]"
-        >
-          <LogOut className="size-3.5" />
-          Déconnexion
-        </button>
+
+        <div className="flex flex-col items-center text-center">
+          <div className="relative">
+            <div className="flex size-28 items-center justify-center overflow-hidden rounded-full border-[3px] border-[var(--ak-gold)] bg-[#E8F0EA] shadow-[0_0_0_6px_rgba(201,162,76,0.15)]">
+              {member.photoUrl && !avatarBroken ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={member.photoUrl}
+                  src={member.photoUrl}
+                  alt={`Photo de ${member.name}`}
+                  className="h-full w-full object-cover object-center"
+                  onError={() => setAvatarBroken(true)}
+                />
+              ) : (
+                <span className="font-[family-name:var(--font-amiri)] text-3xl text-[var(--ak-emerald-deep)]">
+                  {`${member.prenoms.charAt(0)}${member.nom.charAt(0)}`.toUpperCase()}
+                </span>
+              )}
+              {photoUploading ? (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-white/70">
+                  <Loader2 className="size-6 animate-spin text-[var(--ak-emerald-deep)]" />
+                </span>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setPhotoFlowOpen(true)}
+              disabled={photoUploading}
+              className="absolute -right-1 -bottom-1 flex size-10 items-center justify-center rounded-full border-2 border-white bg-[var(--ak-emerald-deep)] text-white shadow-md disabled:opacity-60"
+              aria-label={member.photoUrl ? "Changer ma photo" : "Ajouter ma photo"}
+            >
+              <Camera className="size-5" aria-hidden />
+            </button>
+          </div>
+
+          <p className="mt-4 font-[family-name:var(--font-amiri)] text-2xl text-[var(--ak-emerald-deep)]">
+            {member.name}
+          </p>
+          <p className="mt-0.5 font-mono text-sm text-[var(--ak-ink-soft)]">
+            {member.id}
+          </p>
+          {!member.photoUrl ? (
+            <p className="mt-2 text-xs text-[var(--ak-ink-soft)]">
+              Ajoutez votre photo : elle apparaîtra sur votre carte membre.
+            </p>
+          ) : null}
+          {photoError ? (
+            <p className="mt-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-800">
+              {photoError}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {!member.ficheComplete ? (
@@ -554,51 +604,35 @@ export function MonEspaceClient() {
         </div>
       ) : null}
 
-      <div className="flex gap-2 rounded-full bg-[var(--ak-emerald-deep)]/5 p-1">
-        <button
-          type="button"
-          onClick={() => setTab("profil")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "profil"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Mon profil
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("carte")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "carte"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Ma carte
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("versements")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "versements"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Versements
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("wallet")}
-          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
-            tab === "wallet"
-              ? "bg-[var(--ak-emerald-deep)] text-white"
-              : "text-[var(--ak-emerald-deep)]"
-          }`}
-        >
-          Portefeuille
-        </button>
+      <div
+        role="tablist"
+        aria-label="Sections de mon espace"
+        className="grid grid-cols-2 gap-2 rounded-2xl bg-[var(--ak-emerald-deep)]/5 p-1.5 sm:grid-cols-4"
+      >
+        {(
+          [
+            ["profil", "Mon profil", UserRound],
+            ["carte", "Ma carte", IdCard],
+            ["versements", "Versements", Receipt],
+            ["wallet", "Portefeuille", Wallet],
+          ] as const
+        ).map(([id, label, Icon]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+              tab === id
+                ? "bg-[var(--ak-emerald-deep)] text-white shadow-sm"
+                : "text-[var(--ak-emerald-deep)] hover:bg-[var(--ak-emerald-deep)]/10"
+            }`}
+          >
+            <Icon className="size-4 shrink-0" aria-hidden />
+            <span className="whitespace-nowrap">{label}</span>
+          </button>
+        ))}
       </div>
 
       {error ? (
@@ -612,7 +646,7 @@ export function MonEspaceClient() {
         </p>
       ) : null}
 
-      <WebPushToggle />
+      <WebPushToggle variant="banner" />
 
       {tab === "profil" ? (
         <div className="space-y-6">
@@ -707,6 +741,7 @@ export function MonEspaceClient() {
             uploading={photoUploading}
             error={photoError}
             onSelected={(e) => void onPhotoSelected(e)}
+            onOpen={() => setPhotoFlowOpen(true)}
           />
         ) : null}
 
@@ -729,6 +764,7 @@ export function MonEspaceClient() {
             uploading={photoUploading}
             error={photoError}
             onSelected={(e) => void onPhotoSelected(e)}
+            onOpen={() => setPhotoFlowOpen(true)}
             compact
           />
           <div className="rounded-2xl border border-[var(--ak-gold)]/45 bg-white p-5 shadow-[0_12px_36px_rgba(11,58,37,0.08)]">
@@ -817,6 +853,13 @@ export function MonEspaceClient() {
                 {payError}
               </p>
             ) : null}
+          </div>
+
+          <div className="rounded-xl border border-[var(--ak-gold)]/50 bg-white p-5">
+            <p className="mb-3 text-sm font-medium text-[var(--ak-emerald-deep)]">
+              Faire une contribution
+            </p>
+            <MemberContributeForm memberName={member.name} hideTitle />
           </div>
 
           <div className="rounded-xl border border-[var(--ak-gold)]/50 bg-white p-5">

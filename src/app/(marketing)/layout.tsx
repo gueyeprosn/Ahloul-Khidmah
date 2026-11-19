@@ -12,6 +12,7 @@ import { MarketingJsonLd } from "@/components/seo/json-ld"
 import { LOCALE_COOKIE, type Locale } from "@/i18n/landing"
 import { buildMetadata } from "@/lib/seo"
 import { getMemberSession } from "@/lib/member-auth"
+import { prisma } from "@/lib/db"
 import "./landing.css"
 
 const amiri = Amiri({
@@ -48,6 +49,18 @@ export default async function MarketingLayout({
   const raw = jar.get(LOCALE_COOKIE)?.value
   const initialLocale: Locale = raw === "ar" ? "ar" : "fr"
   const memberSession = await getMemberSession()
+  // Photo du membre connecté, affichée dans la barre de navigation.
+  const memberChip = memberSession
+    ? await prisma.adherent
+        .findUnique({
+          where: { id: memberSession.adherentId },
+          select: { photoUrl: true, prenoms: true, nom: true },
+        })
+        .then((a) =>
+          a ? { name: `${a.prenoms} ${a.nom}`.trim(), photoUrl: a.photoUrl } : null
+        )
+        .catch(() => null)
+    : null
 
   return (
     <LocaleProvider initialLocale={initialLocale}>
@@ -59,9 +72,9 @@ export default async function MarketingLayout({
           lang={initialLocale === "ar" ? "ar" : "fr"}
           dir={initialLocale === "ar" ? "rtl" : "ltr"}
         >
-          <LandingNav isMember={Boolean(memberSession)} />
+          <LandingNav isMember={Boolean(memberSession)} member={memberChip} />
           <main>{children}</main>
-          <LandingFooter />
+          <LandingFooter isMember={Boolean(memberSession)} />
         </div>
         <StoreCartDrawer />
         <StoreSearchPalette />

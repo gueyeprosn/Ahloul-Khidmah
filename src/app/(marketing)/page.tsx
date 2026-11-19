@@ -43,7 +43,11 @@ export default async function LandingPage({
       <FaqJsonLd />
       <ScrollToAdhesion isMember={isMember} />
       <LandingHero isMember={isMember} />
-      <LandingJoin defaultMontant={params.montant} isMember={isMember} />
+      <LandingJoin
+        defaultMontant={params.montant}
+        isMember={isMember}
+        memberName={memberSession?.name ?? null}
+      />
       <LandingPourquoi />
       <LandingMission />
       <LandingStoreMention />

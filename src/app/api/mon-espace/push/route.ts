@@ -3,18 +3,8 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { getMemberSession } from "@/lib/member-auth"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
-import { notifyDevice, type Localized } from "@/lib/push"
-
-const ACTIVATED: Localized = {
-  fr: {
-    title: "Notifications activées",
-    body: "Vous recevrez ici la confirmation de vos paiements et vos rappels.",
-  },
-  ar: {
-    title: "تم تفعيل الإشعارات",
-    body: "ستصلك هنا تأكيدات دفعاتك وتذكيراتك.",
-  },
-}
+import { notifyDevice } from "@/lib/push"
+import { WELCOME_ROUTE, WELCOME_WEB_PATH, welcomeNotification } from "@/lib/welcome-notification"
 
 const tokenSchema = z.object({ token: z.string().min(10).max(4096) })
 const registerSchema = tokenSchema.extend({ locale: z.enum(["fr", "ar"]).optional() })
@@ -42,10 +32,20 @@ export async function POST(request: Request) {
     create: { token, platform: "web", locale, adherentId: session.adherentId },
     update: { platform: "web", locale, adherentId: session.adherentId, lastSeenAt: new Date() },
   })
-  // Première liaison de cet appareil à ce membre : message de confirmation
-  // (preuve immédiate que ça marche). Pas pour un simple rafraîchissement.
+  // Première liaison de cet appareil à ce membre : notification de bienvenue
+  // (nom, n° de badge, « touchez pour voir votre badge »). Preuve immédiate que
+  // ça marche. Pas pour un simple rafraîchissement.
   if (before?.adherentId !== session.adherentId) {
-    void notifyDevice(token, locale, ACTIVATED, { webPath: "/mon-espace" })
+    const member = await prisma.adherent.findUnique({
+      where: { id: session.adherentId },
+      select: { id: true, prenoms: true, nom: true },
+    })
+    if (member) {
+      void notifyDevice(token, locale, welcomeNotification(member), {
+        route: WELCOME_ROUTE,
+        webPath: WELCOME_WEB_PATH,
+      })
+    }
   }
   return NextResponse.json({ ok: true })
 }

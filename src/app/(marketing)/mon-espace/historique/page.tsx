@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { PrintButton } from "@/components/mon-espace/print-button"
 import { buildMetadata } from "@/lib/seo"
 import { getMemberSession } from "@/lib/member-auth"
@@ -80,7 +81,7 @@ export default async function HistoriquePage({
   }
 
   return (
-    <section className="relative min-h-[100svh] px-5 pt-28 pb-20 md:px-8 md:pt-36">
+    <section className="relative min-h-[100svh] px-4 pt-24 pb-28 sm:px-5 sm:pb-20 md:px-8 md:pt-36">
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
@@ -102,12 +103,14 @@ export default async function HistoriquePage({
         id="historique-print"
         className="relative mx-auto max-w-3xl rounded-2xl border border-[var(--ak-gold)] bg-[var(--ak-ivory)] p-6 shadow-xl md:p-8"
       >
-        <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="no-print mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
             href="/mon-espace"
-            className="text-sm font-medium text-[var(--ak-emerald-deep)] underline"
+            aria-label="Retour à mon espace"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-[var(--ak-emerald-deep)] bg-white px-5 text-base font-semibold text-[var(--ak-emerald-deep)] shadow-sm transition hover:bg-[var(--ak-emerald-deep)] hover:text-white focus-visible:ring-4 focus-visible:ring-[var(--ak-emerald-mid)]/40 focus-visible:outline-none"
           >
-            ← Retour à mon espace
+            <ArrowLeft className="size-5" aria-hidden />
+            Retour à mon espace
           </Link>
           <PrintButton />
         </div>
@@ -172,7 +175,51 @@ export default async function HistoriquePage({
             Aucun versement à afficher pour cette sélection.
           </p>
         ) : (
-          <div className="mt-6 overflow-x-auto">
+          <>
+          <ul className="mt-6 space-y-3 sm:hidden print:hidden" aria-label="Mes versements">
+            {filtered.map((e) => (
+              <li
+                key={e.ref}
+                className="rounded-xl border border-[var(--ak-gold)]/40 bg-white p-3.5 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[var(--ak-emerald-deep)]">
+                      {historyKindLabel(e.kind)}
+                    </p>
+                    {e.label.includes("—") ? (
+                      <p className="text-xs capitalize text-[var(--ak-ink-soft)]">
+                        {e.label.replace(/^[^—]*—\s*/, "")}
+                      </p>
+                    ) : null}
+                  </div>
+                  <p className="shrink-0 text-base font-semibold whitespace-nowrap">
+                    {fcfa(e.amount)}
+                  </p>
+                </div>
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--ak-ink-soft)]">
+                  <span>
+                    {new Date(e.date).toLocaleDateString("fr-FR", { timeZone: "Africa/Dakar" })}
+                  </span>
+                  <span>{canalLabel(e.canal)}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 font-semibold ${
+                      e.status === "confirme"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : e.status === "attente"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {STATUS_LABEL[e.status]}
+                  </span>
+                  <span className="font-mono">{e.ref}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-6 hidden overflow-x-auto sm:block print:block">
             <table className="w-full min-w-[34rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b-2 border-[var(--ak-emerald-deep)] text-left text-xs uppercase tracking-wide text-[var(--ak-ink-soft)]">
@@ -216,6 +263,7 @@ export default async function HistoriquePage({
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         <div className="mt-6 ml-auto max-w-xs space-y-1 text-sm">
@@ -244,6 +292,17 @@ export default async function HistoriquePage({
           apparaissent une fois enregistrés par l&apos;association. Ce relevé est
           informatif ; conservez aussi vos reçus de paiement.
         </p>
+      </div>
+      {/* Toujours à portée du pouce sur téléphone : retour à Mon espace sans remonter la page. */}
+      <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ak-gold)]/40 bg-[var(--ak-ivory)]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur-md sm:hidden">
+        <Link
+          href="/mon-espace"
+          aria-label="Retour à mon espace"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--ak-emerald-deep)] px-5 text-base font-semibold text-white shadow-md active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-[var(--ak-emerald-mid)]/40 focus-visible:outline-none"
+        >
+          <ArrowLeft className="size-5" aria-hidden />
+          Retour à mon espace
+        </Link>
       </div>
     </section>
   )

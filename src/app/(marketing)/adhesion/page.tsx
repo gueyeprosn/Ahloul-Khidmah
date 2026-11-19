@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { AdhesionForm } from "@/components/adhesion/adhesion-form"
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { buildMetadata } from "@/lib/seo"
+import { getMemberSession } from "@/lib/member-auth"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = buildMetadata({
   title: "Fiche d'adhésion nationale et internationale",
@@ -24,6 +26,8 @@ export default async function AdhesionPage({
 }: {
   searchParams: Promise<{ montant?: string }>
 }) {
+  // Déjà membre et connecté : pas de nouvelle fiche d'adhésion.
+  if (await getMemberSession()) redirect("/mon-espace")
   const params = await searchParams
 
   return (

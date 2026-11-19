@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { ContributeForm } from "@/components/contribute/contribute-form"
+import { MemberContributeForm } from "@/components/contribute/member-contribute-form"
+import { getMemberSession } from "@/lib/member-auth"
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { getContributeDict } from "@/i18n/contribute"
 import { buildMetadata } from "@/lib/seo"
@@ -21,7 +23,8 @@ export const metadata: Metadata = buildMetadata({
   ],
 })
 
-export default function ContribuerPage() {
+export default async function ContribuerPage() {
+  const member = await getMemberSession()
   return (
     <>
       <BreadcrumbJsonLd
@@ -65,16 +68,23 @@ export default function ContribuerPage() {
           </p>
 
           <div className="mt-10 rounded-3xl bg-[var(--ak-ivory)] p-4 text-[var(--ak-ink)] shadow-[0_20px_50px_rgba(0,0,0,0.25)] md:p-8">
-            <ContributeForm />
-            <p className="mt-6 text-center text-sm text-[var(--ak-ink-soft)]">
-              Vous souhaitez rejoindre une cellule ?{" "}
-              <Link
-                href="/adhesion"
-                className="font-semibold text-[var(--ak-emerald-deep)] underline-offset-4 hover:underline"
-              >
-                Remplir la fiche d&apos;adhésion
-              </Link>
-            </p>
+            {member ? (
+              // Membre connecté : seulement le montant, ses informations sont déjà connues.
+              <MemberContributeForm memberName={member.name} className="mx-auto max-w-md" />
+            ) : (
+              <>
+                <ContributeForm />
+                <p className="mt-6 text-center text-sm text-[var(--ak-ink-soft)]">
+                  Vous souhaitez rejoindre une cellule ?{" "}
+                  <Link
+                    href="/adhesion"
+                    className="font-semibold text-[var(--ak-emerald-deep)] underline-offset-4 hover:underline"
+                  >
+                    Remplir la fiche d&apos;adhésion
+                  </Link>
+                </p>
+              </>
+            )}
           </div>
         </div>
       </section>

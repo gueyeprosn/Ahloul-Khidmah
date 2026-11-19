@@ -46,6 +46,34 @@ export class PaydunyaUnavailableError extends Error {
 export const PAYDUNYA_UNAVAILABLE_MESSAGE =
   "Le paiement en ligne n'est pas disponible pour le moment. Réessayez plus tard."
 
+const RETRY_STATUS = new Set([502, 503, 504])
+const RETRY_DELAYS_MS = [500, 1500]
+const ATTEMPT_TIMEOUT_MS = 12_000
+
+/**
+ * Appel PayDunya avec quelques nouvelles tentatives sur panne passagère
+ * (502/503/504 côté PayDunya ou Cloudflare, coupure réseau, délai dépassé).
+ * Jamais sur 403 : un blocage Cloudflare ne se règle pas en réessayant. Si
+ * tout échoue, lève PaydunyaUnavailableError (message propre au visiteur).
+ */
+async function fetchPaydunya(
+  url: string,
+  init: RequestInit,
+  delays: number[] = RETRY_DELAYS_MS
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS) })
+      if (!RETRY_STATUS.has(res.status) || attempt >= delays.length) return res
+    } catch (e) {
+      if (attempt >= delays.length) {
+        throw new PaydunyaUnavailableError(0, e instanceof Error ? e.message : "réseau")
+      }
+    }
+    await new Promise((r) => setTimeout(r, delays[attempt]))
+  }
+}
+
 async function readJson<T>(res: Response): Promise<T> {
   const text = await res.text()
   try {
@@ -65,6 +93,35 @@ export function siteOrigin() {
   )
 }
 
+/**
+ * PayDunya envoie l'IPN en `application/x-www-form-urlencoded` avec des clés
+ * « PHP » imbriquées : `data[hash]`, `data[invoice][token]`,
+ * `data[custom_data][payment_id]`… (et non un champ `data` contenant du JSON).
+ * Reconstruit l'objet imbriqué. Les clés dangereuses sont ignorées
+ * (prototype pollution).
+ */
+export function parseNestedForm(
+  entries: Iterable<[string, unknown]>
+): Record<string, unknown> {
+  const FORBIDDEN = new Set(["__proto__", "prototype", "constructor"])
+  const root: Record<string, unknown> = {}
+  for (const [rawKey, value] of entries) {
+    const parts = rawKey
+      .replace(/\]/g, "")
+      .split("[")
+      .map((p) => p.trim())
+    if (parts.length === 0 || parts.some((p) => p === "" || FORBIDDEN.has(p))) continue
+    let node = root
+    for (let i = 0; i < parts.length - 1; i++) {
+      const next = node[parts[i]]
+      if (typeof next !== "object" || next === null) node[parts[i]] = {}
+      node = node[parts[i]] as Record<string, unknown>
+    }
+    node[parts[parts.length - 1]] = typeof value === "string" ? value : String(value)
+  }
+  return root
+}
+
 export function verifyPaydunyaHash(hash: string | undefined | null) {
   const master = process.env.PAYDUNYA_MASTER_KEY
   if (!master || !hash) return false
@@ -77,6 +134,26 @@ export function verifyPaydunyaHash(hash: string | undefined | null) {
   const givenBuf = Buffer.from(given, "utf8")
   if (expectedBuf.length !== givenBuf.length) return false
   return timingSafeEqual(expectedBuf, givenBuf)
+}
+
+/**
+ * Diagnostic d'un hash d'IPN refusé, SANS rien révéler : ne renvoie que des
+ * booléens/longueurs. Sert à trouver pourquoi PayDunya signe autrement que
+ * prévu (autre clé utilisée, casse, espaces…).
+ */
+export function diagnoseIpnHash(hash: string | undefined | null, invoiceToken?: string) {
+  const given = String(hash ?? "")
+  const sha = (v?: string) => (v ? createHash("sha512").update(v).digest("hex") : "")
+  const eq = (v?: string) => Boolean(v) && sha(v) === given.toLowerCase()
+  return {
+    givenLength: given.length,
+    isHex128: /^[0-9a-f]{128}$/i.test(given),
+    matchesMasterTrimmed: eq(process.env.PAYDUNYA_MASTER_KEY?.trim()),
+    matchesPrivateKey: eq(process.env.PAYDUNYA_PRIVATE_KEY?.trim()),
+    matchesApiToken: eq(process.env.PAYDUNYA_TOKEN?.trim()),
+    matchesInvoiceToken: eq(invoiceToken),
+    mode: paydunyaMode(),
+  }
 }
 
 export type CreateInvoiceInput = {
@@ -145,7 +222,7 @@ export async function createCheckoutInvoice(
     },
   }
 
-  const res = await fetch(`${apiBase()}/checkout-invoice/create`, {
+  const res = await fetchPaydunya(`${apiBase()}/checkout-invoice/create`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify(body),
@@ -197,7 +274,7 @@ export type ConfirmInvoiceResult = {
 export async function confirmCheckoutInvoice(
   token: string
 ): Promise<ConfirmInvoiceResult> {
-  const res = await fetch(
+  const res = await fetchPaydunya(
     `${apiBase()}/checkout-invoice/confirm/${encodeURIComponent(token)}`,
     {
       method: "GET",
