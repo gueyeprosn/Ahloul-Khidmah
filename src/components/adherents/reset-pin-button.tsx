@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { KeyRound } from "lucide-react"
@@ -14,17 +15,16 @@ export function ResetPinButton({
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [confirm, confirmDialog] = useConfirm()
 
   if (!hasPin) return null
 
   async function reset() {
-    if (
-      !confirm(
-        "Réinitialiser le code PIN de cet adhérent ? Il pourra se reconnecter avec les 4 derniers caractères de son N° membre, le temps d'en choisir un nouveau."
-      )
-    ) {
-      return
-    }
+    const ok = await confirm(
+      "Réinitialiser le code PIN de cet adhérent ? Il pourra se reconnecter avec les 4 derniers caractères de son N° membre, le temps d'en choisir un nouveau.",
+      { title: "Réinitialiser le PIN", confirmLabel: "Réinitialiser" }
+    )
+    if (!ok) return
     setLoading(true)
     try {
       const res = await fetch(`/api/adherents/${adherentId}/reset-pin`, {
@@ -42,15 +42,18 @@ export function ResetPinButton({
   }
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      disabled={loading}
-      onClick={() => void reset()}
-    >
-      <KeyRound className="size-3.5" />
-      {loading ? "…" : "Réinitialiser le PIN"}
-    </Button>
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={loading}
+        onClick={() => void reset()}
+      >
+        <KeyRound className="size-3.5" />
+        {loading ? "…" : "Réinitialiser le PIN"}
+      </Button>
+      {confirmDialog}
+    </>
   )
 }

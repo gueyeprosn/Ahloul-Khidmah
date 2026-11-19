@@ -1,5 +1,6 @@
 import { adhesionLightSchema, type AdhesionLightValues } from "@/features/adherents/schema"
 import {
+  assertUniqueAdherentTel,
   createAdherentFromForm,
   createAdherentWithMemberNumber,
   findAdherentIdByPhone,
@@ -50,6 +51,10 @@ export async function startAdhesionCheckoutFromDraft(raw: unknown) {
     throw new Error("Montant invalide pour le paiement")
   }
 
+  // Refuser tout de suite un numéro déjà inscrit : sinon le visiteur paie,
+  // puis l'inscription échoue (la fiche n'est créée qu'après le paiement).
+  await assertUniqueAdherentTel(tel)
+
   const fullName = `${draft.prenoms} ${draft.nom}`.trim()
   const periode = currentPeriode()
 
@@ -65,17 +70,24 @@ export async function startAdhesionCheckoutFromDraft(raw: unknown) {
     },
   })
 
-  const invoice = await createCheckoutInvoice({
-    amount,
-    description: `Adhésion Ahloul Khidmah — ${fullName}`,
-    paymentId: payment.id,
-    type: "adhesion",
-    periode,
-    customer: {
-      name: fullName,
-      phone: tel,
-    },
-  })
+  let invoice: Awaited<ReturnType<typeof createCheckoutInvoice>>
+  try {
+    invoice = await createCheckoutInvoice({
+      amount,
+      description: `Adhésion Ahloul Khidmah — ${fullName}`,
+      paymentId: payment.id,
+      type: "adhesion",
+      periode,
+      customer: {
+        name: fullName,
+        phone: tel,
+      },
+    })
+  } catch (e) {
+    // Aucune facture n'existe : on ne laisse pas de paiement « pending » orphelin.
+    await prisma.payment.delete({ where: { id: payment.id } }).catch(() => {})
+    throw e
+  }
 
   return prisma.payment.update({
     where: { id: payment.id },
@@ -84,6 +96,59 @@ export async function startAdhesionCheckoutFromDraft(raw: unknown) {
       checkoutUrl: invoice.url,
     },
   })
+}
+
+/** Fenêtre pendant laquelle un nouvel envoi du même numéro réutilise la fiche de secours. */
+const WAVE_FALLBACK_REUSE_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Secours quand PayDunya est indisponible : le visiteur devient membre
+ * (« actif », canal Wave) tout de suite, puis paie sa contribution par Wave.
+ * Un paiement « pending » est créé pour garder la trace de ce qui reste à
+ * recevoir. Un second envoi du même numéro dans les 24 h (double clic,
+ * réessai) réutilise la fiche au lieu d'afficher « numéro déjà utilisé ».
+ */
+export async function registerAdhesionWaveFallback(raw: unknown) {
+  const draft = adhesionLightSchema.parse(raw)
+  const tel = assertCompletePhone(draft.tel)
+  draft.tel = tel
+  const amount = parseMontantFcfa(draft.montant, draft.montantAutre)
+  if (!amount || amount < 100) {
+    throw new Error("Montant invalide pour le paiement")
+  }
+
+  try {
+    const adherent = await createAdherentFromForm(draft, {
+      mode: "light",
+      status: "actif",
+      allowCreateCellule: true,
+      canal: "wave",
+    })
+    await prisma.payment.create({
+      data: {
+        type: "adhesion",
+        periode: currentPeriode(),
+        amount,
+        status: "pending",
+        adherentId: adherent.id,
+        customerName: `${draft.prenoms} ${draft.nom}`.trim(),
+        customerPhone: tel,
+      },
+    })
+    return { adherent, amount }
+  } catch (e) {
+    if (!(e instanceof Error) || e.message !== "DUPLICATE_PHONE") throw e
+    const existingId = await findAdherentIdByPhone(tel)
+    const existing = existingId
+      ? await prisma.adherent.findUnique({ where: { id: existingId } })
+      : null
+    const recent =
+      existing &&
+      existing.canal === "wave" &&
+      Date.now() - existing.createdAt.getTime() < WAVE_FALLBACK_REUSE_MS
+    if (!existing || !recent) throw e
+    return { adherent: existing, amount }
+  }
 }
 
 /** Crée l'adhérent à partir du brouillon stocké sur le paiement (idempotent). */

@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ export function ContributionActions({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [softpayId, setSoftpayId] = useState<string | null>(null)
+  const [confirm, confirmDialog] = useConfirm()
 
   async function retry() {
     setLoading(true)
@@ -42,7 +44,12 @@ export function ContributionActions({
   }
 
   async function cancel() {
-    if (!confirm("Annuler cette contribution en attente ?")) return
+    const ok = await confirm("Annuler cette contribution en attente ?", {
+      title: "Annuler la contribution",
+      confirmLabel: "Annuler la contribution",
+      destructive: true,
+    })
+    if (!ok) return
     setLoading(true)
     try {
       const res = await fetch(`/api/contributions/${contributionId}`, {
@@ -119,6 +126,7 @@ export function ContributionActions({
           </div>
         </div>
       ) : null}
+      {confirmDialog}
     </>
   )
 }

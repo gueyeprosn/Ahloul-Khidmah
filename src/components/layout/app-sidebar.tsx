@@ -69,7 +69,7 @@ export function AppSidebar({
       <SidebarContent>
         {mainNav.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-[var(--ak-gold)]/80">
+            <SidebarGroupLabel className="text-[var(--ak-gold-light)]/90">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>

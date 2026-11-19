@@ -6,7 +6,11 @@ export function parseMontantFcfa(
   if (montant === "14000") return 14000
   if (montant === "140000") return 140000
   if (montant === "autre") {
-    const n = Number(String(montantAutre || "").replace(/\s/g, ""))
+    const cleaned = String(montantAutre || "")
+      .replace(/f\s*cfa|cfa|fcfa|xof|f\b/gi, "")
+      .replace(/\s/g, "")
+      .replace(/(?<=\d)[.,](?=\d{3}(?:\D|$))/g, "")
+    const n = Number(cleaned)
     return Number.isFinite(n) ? n : 0
   }
   const n = Number(montant)

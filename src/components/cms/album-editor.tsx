@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -44,6 +45,7 @@ export function AlbumEditor({
   photos: PhotoRow[]
 }) {
   const router = useRouter()
+  const [confirm, confirmDialog] = useConfirm()
   const fileRef = useRef<HTMLInputElement>(null)
   const [title, setTitle] = useState(album.title)
   const [description, setDescription] = useState(album.description || "")
@@ -141,7 +143,12 @@ export function AlbumEditor({
   }
 
   async function removePhoto(id: string) {
-    if (!confirm("Supprimer cette photo ?")) return
+    const ok = await confirm("Supprimer cette photo ?", {
+      title: "Supprimer la photo",
+      confirmLabel: "Supprimer",
+      destructive: true,
+    })
+    if (!ok) return
     setLoading(true)
     try {
       await fetch(`/api/photos/${id}`, { method: "DELETE" })
@@ -296,6 +303,8 @@ export function AlbumEditor({
                       size="sm"
                       variant="outline"
                       disabled={loading || i === 0}
+                      aria-label="Monter"
+                      title="Monter"
                       onClick={() =>
                         void patchPhoto(p.id, { action: "move", dir: "up" })
                       }
@@ -306,6 +315,8 @@ export function AlbumEditor({
                       size="sm"
                       variant="outline"
                       disabled={loading || i === photos.length - 1}
+                      aria-label="Descendre"
+                      title="Descendre"
                       onClick={() =>
                         void patchPhoto(p.id, { action: "move", dir: "down" })
                       }
@@ -316,6 +327,8 @@ export function AlbumEditor({
                       size="sm"
                       variant="outline"
                       disabled={loading}
+                      aria-label={p.published ? "Masquer" : "Afficher"}
+                      title={p.published ? "Masquer" : "Afficher"}
                       onClick={() =>
                         void patchPhoto(p.id, { published: !p.published })
                       }
@@ -330,6 +343,8 @@ export function AlbumEditor({
                       size="sm"
                       variant="ghost"
                       disabled={loading}
+                      aria-label="Supprimer la photo"
+                      title="Supprimer la photo"
                       onClick={() => void removePhoto(p.id)}
                     >
                       <Trash2 className="size-3.5" />
@@ -345,6 +360,7 @@ export function AlbumEditor({
           </div>
         )}
       </SectionCard>
+      {confirmDialog}
     </div>
   )
 }

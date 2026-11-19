@@ -109,7 +109,7 @@ export default async function AdminStockPage({
 
       <SectionCard flush>
         {filtered.length === 0 ? (
-          <EmptyState icon={Boxes} title="Aucun résultat" description="Aucun produit ne correspond à ce filtre." />
+          <EmptyState className="border-0 py-10" icon={Boxes} title="Aucun résultat" description="Aucun produit ne correspond à ce filtre." />
         ) : (
           <DataTable>
             <DataTableRoot>

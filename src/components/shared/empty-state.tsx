@@ -34,9 +34,9 @@ export function EmptyState({
           <Icon className="size-5" />
         </div>
       ) : null}
-      <h3 className="text-base font-medium tracking-tight text-[var(--ak-emerald-deep)]">
+      <h2 className="text-base font-medium tracking-tight text-[var(--ak-emerald-deep)]">
         {title}
-      </h3>
+      </h2>
       {description ? (
         <p className="mt-1.5 max-w-sm text-sm text-[var(--ak-ink-soft)]">
           {description}

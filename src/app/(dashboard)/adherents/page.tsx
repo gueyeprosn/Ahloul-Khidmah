@@ -245,7 +245,7 @@ export default async function AdherentsPage({
                           </div>
                         ) : null}
                       </Td>
-                      <Td className="tabular-nums">{formatFcfa(amount)}</Td>
+                      <Td className="whitespace-nowrap tabular-nums">{formatFcfa(amount)}</Td>
                       <Td className="hidden text-muted-foreground md:table-cell">
                         {canalLabel(row.canal)}
                       </Td>

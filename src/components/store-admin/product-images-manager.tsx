@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2, Upload } from "lucide-react"
@@ -16,6 +17,7 @@ export function ProductImagesManager({
   images: ProductImageData[]
 }) {
   const router = useRouter()
+  const [confirm, confirmDialog] = useConfirm()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -52,7 +54,12 @@ export function ProductImagesManager({
   }
 
   async function handleDelete(imageId: string) {
-    if (!confirm("Supprimer cette image ?")) return
+    const ok = await confirm("Supprimer cette image ?", {
+      title: "Supprimer l'image",
+      confirmLabel: "Supprimer",
+      destructive: true,
+    })
+    if (!ok) return
     await fetch(`/api/store/admin/products/${productId}/images?imageId=${encodeURIComponent(imageId)}`, {
       method: "DELETE",
     })
@@ -91,6 +98,7 @@ export function ProductImagesManager({
         </label>
       </div>
       {error && <InlineMessage message={error} />}
+      {confirmDialog}
     </div>
   )
 }

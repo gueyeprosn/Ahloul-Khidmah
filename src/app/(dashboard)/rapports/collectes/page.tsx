@@ -114,9 +114,9 @@ export default async function CollectesPage({
               {series.map((b) => (
                 <Tr key={b.key}>
                   <Td className="font-medium text-[var(--ak-ink)]">{b.label}</Td>
-                  <Td className="tabular-nums">{formatFcfa(b.cotisations)}</Td>
-                  <Td className="tabular-nums">{formatFcfa(b.dons)}</Td>
-                  <Td className="tabular-nums font-medium text-[var(--ak-emerald-deep)]">
+                  <Td className="whitespace-nowrap tabular-nums">{formatFcfa(b.cotisations)}</Td>
+                  <Td className="whitespace-nowrap tabular-nums">{formatFcfa(b.dons)}</Td>
+                  <Td className="whitespace-nowrap tabular-nums font-medium text-[var(--ak-emerald-deep)]">
                     {formatFcfa(b.total)}
                   </Td>
                   <Td>

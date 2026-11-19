@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { IdCard, Package } from "lucide-react"
+import { PaymentUnavailableDialog } from "@/components/payments/payment-unavailable-dialog"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { useCart } from "@/components/store/cart-provider"
 import { SHIPPING_ZONES } from "@/features/store/shipping"
@@ -28,6 +29,7 @@ export default function CheckoutPage() {
   // créations de commande avant que le bouton ne se désactive réellement.
   const submittingRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState<string | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
   const [memberName, setMemberName] = useState<string | null>(null)
 
@@ -149,6 +151,12 @@ export default function CheckoutPage() {
         }),
       })
       const data = await res.json()
+      if (res.status === 503) {
+        setUnavailable(data.error || "Paiement indisponible")
+        submittingRef.current = false
+        setSubmitting(false)
+        return
+      }
       if (!res.ok || data.error) {
         setError(data.error || "Impossible de créer la commande")
         submittingRef.current = false
@@ -178,6 +186,10 @@ export default function CheckoutPage() {
 
   return (
     <section className="mx-auto max-w-4xl px-5 pt-28 pb-20 md:px-8 md:pt-36">
+      <PaymentUnavailableDialog
+        message={unavailable}
+        onClose={() => setUnavailable(null)}
+      />
       <nav aria-label="Fil d'Ariane" className="mb-8 text-sm text-[var(--ak-ink-soft)]">
         <ol className="flex flex-wrap items-center gap-2">
           <li><Link href="/" className="hover:underline">Accueil</Link></li>

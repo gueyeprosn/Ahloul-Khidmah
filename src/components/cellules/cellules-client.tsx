@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -29,6 +30,7 @@ type CelluleRow = {
 
 export function CellulesClient({ initial }: { initial: CelluleRow[] }) {
   const router = useRouter()
+  const [confirm, confirmDialog] = useConfirm()
   const [name, setName] = useState("")
   const [zone, setZone] = useState("")
   const [loading, setLoading] = useState(false)
@@ -90,7 +92,12 @@ export function CellulesClient({ initial }: { initial: CelluleRow[] }) {
   }
 
   async function remove(id: string) {
-    if (!confirm("Supprimer cette cellule ?")) return
+    const ok = await confirm("Supprimer cette cellule ?", {
+      title: "Supprimer la cellule",
+      confirmLabel: "Supprimer",
+      destructive: true,
+    })
+    if (!ok) return
     setError("")
     setSuccess("")
     const res = await fetch(`/api/cellules/${id}`, { method: "DELETE" })
@@ -250,6 +257,7 @@ export function CellulesClient({ initial }: { initial: CelluleRow[] }) {
           </DataTableRoot>
         </DataTable>
       )}
+      {confirmDialog}
     </div>
   )
 }

@@ -4,12 +4,36 @@ import { adhesionLightSchema } from "@/features/adherents/schema"
 import { getSession } from "@/lib/auth"
 import {
   draftToPreview,
+  registerAdhesionWaveFallback,
   startAdhesionCheckoutFromDraft,
 } from "@/lib/adhesion-checkout"
 import { adherentToTicket, createAdherentFromForm } from "@/lib/adherents"
 import { prisma } from "@/lib/db"
-import { paydunyaConfigured } from "@/lib/paydunya"
+import {
+  PAYDUNYA_UNAVAILABLE_MESSAGE,
+  PaydunyaUnavailableError,
+  paydunyaConfigured,
+} from "@/lib/paydunya"
+import {
+  WAVE_FALLBACK_ENABLED,
+  WAVE_FALLBACK_NUMBER,
+} from "@/lib/payment-fallback"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
+
+/** PayDunya indisponible : membre « actif » tout de suite + consignes de paiement Wave. */
+async function waveFallbackResponse(draft: ReturnType<typeof adhesionLightSchema.parse>) {
+  const { adherent, amount } = await registerAdhesionWaveFallback(draft)
+  return NextResponse.json({
+    ok: true,
+    fallback: "wave" as const,
+    wave: {
+      number: WAVE_FALLBACK_NUMBER,
+      amount,
+      reference: adherent.numAdhesion,
+    },
+    preview: draftToPreview(draft),
+  })
+}
 
 export async function GET(request: Request) {
   const session = await getSession()
@@ -73,18 +97,29 @@ export async function POST(request: Request) {
         : ("full" as const)
 
     if (mode === "light") {
+      const draft = adhesionLightSchema.parse(body)
       if (!paydunyaConfigured()) {
+        if (WAVE_FALLBACK_ENABLED) return await waveFallbackResponse(draft)
         return NextResponse.json(
-          {
-            error:
-              "Le paiement en ligne n'est pas disponible pour le moment. Réessayez plus tard.",
-          },
+          { error: PAYDUNYA_UNAVAILABLE_MESSAGE },
           { status: 503 }
         )
       }
 
-      const draft = adhesionLightSchema.parse(body)
-      const payment = await startAdhesionCheckoutFromDraft(draft)
+      let payment: Awaited<ReturnType<typeof startAdhesionCheckoutFromDraft>>
+      try {
+        payment = await startAdhesionCheckoutFromDraft(draft)
+      } catch (err) {
+        if (
+          WAVE_FALLBACK_ENABLED &&
+          (err instanceof PaydunyaUnavailableError ||
+            (err instanceof Error && err.message === "DUPLICATE_PHONE"))
+        ) {
+          console.error(`${err.message} — adhésion enregistrée, paiement par Wave`)
+          return await waveFallbackResponse(draft)
+        }
+        throw err
+      }
 
       return NextResponse.json({
         ok: true,
@@ -126,6 +161,12 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+    if (e instanceof Error && e.message === "Montant invalide pour le paiement") {
+      return NextResponse.json(
+        { error: "Montant invalide : indiquez au moins 100 FCFA, en chiffres." },
+        { status: 400 }
+      )
+    }
     if (e instanceof Error && e.message === "DUPLICATE_PHONE") {
       return NextResponse.json(
         {
@@ -133,6 +174,13 @@ export async function POST(request: Request) {
             "Ce numéro de téléphone est déjà utilisé par un autre adhérent.",
         },
         { status: 409 }
+      )
+    }
+    if (e instanceof PaydunyaUnavailableError) {
+      console.error(e.message)
+      return NextResponse.json(
+        { error: PAYDUNYA_UNAVAILABLE_MESSAGE },
+        { status: 503 }
       )
     }
     console.error(e)

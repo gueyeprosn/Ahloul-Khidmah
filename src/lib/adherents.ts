@@ -22,6 +22,8 @@ type CreateOptions = {
   status?: "actif" | "en_attente"
   allowCreateCellule?: boolean
   mode?: "light" | "full" | "admin"
+  /** Canal de paiement enregistré sur la fiche (défaut : paydunya en mode light). */
+  canal?: string
 }
 
 /**
@@ -97,7 +99,7 @@ export async function findOrCreateCellule(name: string, zone: string) {
   }
 }
 
-async function assertUniqueAdherentTel(tel: string, excludeId?: string) {
+export async function assertUniqueAdherentTel(tel: string, excludeId?: string) {
   const normalized = normalizeWaPhone(tel)
   const digits = tel.replace(/\D/g, "")
   const local9 = digits.length >= 9 ? digits.slice(-9) : digits
@@ -192,7 +194,7 @@ export async function createAdherentFromForm(
       autreProfession: null,
       montant: data.montant,
       montantAutre: data.montantAutre?.trim() || null,
-      canal: "paydunya",
+      canal: opts.canal ?? "paydunya",
       status,
       ficheComplete: false,
       celluleId: cellule.id,

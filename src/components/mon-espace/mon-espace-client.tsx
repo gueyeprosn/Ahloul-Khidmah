@@ -1,5 +1,6 @@
 "use client"
 
+import { PaymentUnavailableDialog } from "@/components/payments/payment-unavailable-dialog"
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -92,6 +93,7 @@ export function MonEspaceClient() {
   const [payMonthsCount, setPayMonthsCount] = useState(1)
   const [payLoading, setPayLoading] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState<string | null>(null)
   const [payment, setPayment] = useState<{
     paymentId: string
     amount: number
@@ -303,6 +305,14 @@ export function MonEspaceClient() {
           setPayError("Session expirée — reconnectez-vous.")
           return
         }
+        if (res.status === 503) {
+          setUnavailable(
+            typeof data.error === "string"
+              ? data.error
+              : "Paiement en ligne indisponible."
+          )
+          return
+        }
         setPayError(
           typeof data.error === "string"
             ? data.error
@@ -471,6 +481,10 @@ export function MonEspaceClient() {
 
   return (
     <div className="space-y-6">
+      <PaymentUnavailableDialog
+        message={unavailable}
+        onClose={() => setUnavailable(null)}
+      />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--ak-gold)] bg-[#E8F0EA]">

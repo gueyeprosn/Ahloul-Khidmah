@@ -35,6 +35,29 @@ function headers() {
   }
 }
 
+/** PayDunya injoignable ou réponse non-JSON (ex. page Cloudflare 403/5xx). */
+export class PaydunyaUnavailableError extends Error {
+  constructor(public status: number, detail?: string) {
+    super(`PayDunya indisponible (HTTP ${status})${detail ? ` — ${detail}` : ""}`)
+    this.name = "PaydunyaUnavailableError"
+  }
+}
+
+export const PAYDUNYA_UNAVAILABLE_MESSAGE =
+  "Le paiement en ligne n'est pas disponible pour le moment. Réessayez plus tard."
+
+async function readJson<T>(res: Response): Promise<T> {
+  const text = await res.text()
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    throw new PaydunyaUnavailableError(
+      res.status,
+      text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)
+    )
+  }
+}
+
 export function siteOrigin() {
   return (
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
@@ -128,7 +151,7 @@ export async function createCheckoutInvoice(
     body: JSON.stringify(body),
   })
 
-  const data = (await res.json()) as {
+  const data = await readJson<{
     response_code?: string | number
     response_text?: string
     description?: string
@@ -136,7 +159,7 @@ export async function createCheckoutInvoice(
     response_token?: string
     invoice_url?: string
     url?: string
-  }
+  }>(res)
 
   const token = data.token || data.response_token
   const urlFromText =
@@ -181,13 +204,13 @@ export async function confirmCheckoutInvoice(
       headers: headers(),
     }
   )
-  const data = (await res.json()) as {
+  const data = await readJson<{
     status?: string
     response_code?: string | number
     receipt_url?: string
     customer?: { name?: string; phone?: string }
     hash?: string
-  }
+  }>(res)
 
   return {
     status: String(data.status || "").toLowerCase(),

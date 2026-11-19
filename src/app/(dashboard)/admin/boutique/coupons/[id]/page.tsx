@@ -82,7 +82,7 @@ export default async function CouponDetailPage({ params }: Params) {
                   <Tr key={u.id}>
                     <Td>{formatDateTime(u.createdAt)}</Td>
                     <Td>{u.customerPhone}</Td>
-                    <Td>{formatFcfa(u.discountAmount)}</Td>
+                    <Td className="whitespace-nowrap">{formatFcfa(u.discountAmount)}</Td>
                   </Tr>
                 ))}
               </DataTableBody>
