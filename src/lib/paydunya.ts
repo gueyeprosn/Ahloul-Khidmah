@@ -46,6 +46,34 @@ export class PaydunyaUnavailableError extends Error {
 export const PAYDUNYA_UNAVAILABLE_MESSAGE =
   "Le paiement en ligne n'est pas disponible pour le moment. Réessayez plus tard."
 
+const RETRY_STATUS = new Set([502, 503, 504])
+const RETRY_DELAYS_MS = [500, 1500]
+const ATTEMPT_TIMEOUT_MS = 12_000
+
+/**
+ * Appel PayDunya avec quelques nouvelles tentatives sur panne passagère
+ * (502/503/504 côté PayDunya ou Cloudflare, coupure réseau, délai dépassé).
+ * Jamais sur 403 : un blocage Cloudflare ne se règle pas en réessayant. Si
+ * tout échoue, lève PaydunyaUnavailableError (message propre au visiteur).
+ */
+async function fetchPaydunya(
+  url: string,
+  init: RequestInit,
+  delays: number[] = RETRY_DELAYS_MS
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS) })
+      if (!RETRY_STATUS.has(res.status) || attempt >= delays.length) return res
+    } catch (e) {
+      if (attempt >= delays.length) {
+        throw new PaydunyaUnavailableError(0, e instanceof Error ? e.message : "réseau")
+      }
+    }
+    await new Promise((r) => setTimeout(r, delays[attempt]))
+  }
+}
+
 async function readJson<T>(res: Response): Promise<T> {
   const text = await res.text()
   try {
@@ -77,6 +105,26 @@ export function verifyPaydunyaHash(hash: string | undefined | null) {
   const givenBuf = Buffer.from(given, "utf8")
   if (expectedBuf.length !== givenBuf.length) return false
   return timingSafeEqual(expectedBuf, givenBuf)
+}
+
+/**
+ * Diagnostic d'un hash d'IPN refusé, SANS rien révéler : ne renvoie que des
+ * booléens/longueurs. Sert à trouver pourquoi PayDunya signe autrement que
+ * prévu (autre clé utilisée, casse, espaces…).
+ */
+export function diagnoseIpnHash(hash: string | undefined | null, invoiceToken?: string) {
+  const given = String(hash ?? "")
+  const sha = (v?: string) => (v ? createHash("sha512").update(v).digest("hex") : "")
+  const eq = (v?: string) => Boolean(v) && sha(v) === given.toLowerCase()
+  return {
+    givenLength: given.length,
+    isHex128: /^[0-9a-f]{128}$/i.test(given),
+    matchesMasterTrimmed: eq(process.env.PAYDUNYA_MASTER_KEY?.trim()),
+    matchesPrivateKey: eq(process.env.PAYDUNYA_PRIVATE_KEY?.trim()),
+    matchesApiToken: eq(process.env.PAYDUNYA_TOKEN?.trim()),
+    matchesInvoiceToken: eq(invoiceToken),
+    mode: paydunyaMode(),
+  }
 }
 
 export type CreateInvoiceInput = {
@@ -145,7 +193,7 @@ export async function createCheckoutInvoice(
     },
   }
 
-  const res = await fetch(`${apiBase()}/checkout-invoice/create`, {
+  const res = await fetchPaydunya(`${apiBase()}/checkout-invoice/create`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify(body),
@@ -197,7 +245,7 @@ export type ConfirmInvoiceResult = {
 export async function confirmCheckoutInvoice(
   token: string
 ): Promise<ConfirmInvoiceResult> {
-  const res = await fetch(
+  const res = await fetchPaydunya(
     `${apiBase()}/checkout-invoice/confirm/${encodeURIComponent(token)}`,
     {
       method: "GET",
