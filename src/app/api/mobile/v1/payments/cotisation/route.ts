@@ -3,14 +3,13 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { parseMontantFcfa } from "@/lib/adherents-shared"
 import { paydunyaConfigured, PaydunyaUnavailableError } from "@/lib/paydunya"
-import { resolveUnpaidPeriodes, startPaydunyaCheckout } from "@/lib/payments"
+import { MAX_COTISATION_MONTHS, resolveUnpaidPeriodes, startPaydunyaCheckout } from "@/lib/payments"
 import { rateLimitPersistent } from "@/lib/rate-limit-persistent"
 import { mobileError, rateLimited, readJson } from "@/lib/mobile/http"
 import { authenticateMobile } from "@/lib/mobile/session"
-import { MAX_MONTHS } from "../due/route"
 
 const bodySchema = z.object({
-  monthsCount: z.number().int().min(1).max(MAX_MONTHS),
+  monthsCount: z.number().int().min(1).max(MAX_COTISATION_MONTHS),
 })
 
 /**
@@ -24,7 +23,7 @@ export async function POST(request: Request) {
 
   const parsed = bodySchema.safeParse(await readJson(request))
   if (!parsed.success) {
-    return mobileError("invalid_request", `Choisissez de 1 à ${MAX_MONTHS} mois.`, 400)
+    return mobileError("invalid_request", `Choisissez de 1 à ${MAX_COTISATION_MONTHS} mois.`, 400)
   }
 
   if (!paydunyaConfigured()) {

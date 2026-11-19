@@ -14,6 +14,9 @@ import { labelPeriode, shiftPeriode } from "@/lib/periode"
 import { walletCredit } from "@/lib/wallet"
 import { notifyPaymentCompleted } from "@/lib/payment-notify"
 
+/** Nombre maximal de mois réglables en un seul paiement. */
+export const MAX_COTISATION_MONTHS = 6
+
 /** Périodes couvertes par un paiement cotisation — `periodes` (multi-mois) sinon `periode` seul. */
 export function paymentPeriodes(payment: {
   periode: string | null
