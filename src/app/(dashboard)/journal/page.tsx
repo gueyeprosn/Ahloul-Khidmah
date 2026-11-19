@@ -27,6 +27,7 @@ const ACTION_LABELS: Record<string, string> = {
   "contribution.status_change": "Statut de don modifié",
   "parametres.update": "Profil modifié",
   "payment.reconcile_as_don": "Paiement bloqué réconcilié en don",
+  "push.send": "Notification push envoyée",
 }
 
 const PAGE_SIZE = 50

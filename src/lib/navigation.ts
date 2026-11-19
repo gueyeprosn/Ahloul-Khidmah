@@ -17,6 +17,7 @@ import {
   Tag,
   Star,
   Layers,
+  BellRing,
   type LucideIcon,
 } from "lucide-react"
 
@@ -56,6 +57,7 @@ export const mainNav: NavGroup[] = [
     items: [
       { title: "Albums photo", href: "/medias", icon: Images },
       { title: "Témoignages", href: "/temoignages", icon: MessageSquareQuote },
+      { title: "Notifications", href: "/notifications", icon: BellRing },
     ],
   },
   {

@@ -24,7 +24,7 @@ export function buildCsp(nonce: string) {
     "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://app.paydunya.com https://paydunya.com",
     "font-src 'self' data:",
     "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
-    "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.googletagmanager.com",
+    "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.googletagmanager.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://fcm.googleapis.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self' https://pay.wave.com https://app.paydunya.com https://orangemoneysn.page.link https://sugu.orange-sonatel.com",
