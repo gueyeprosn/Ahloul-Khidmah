@@ -55,6 +55,7 @@ export default async function AdminCouponsPage() {
       <SectionCard flush>
         {coupons.length === 0 ? (
           <EmptyState
+            className="border-0 py-10"
             icon={Tag}
             title="Aucun coupon"
             description="Créez un code de réduction pour vos clients."

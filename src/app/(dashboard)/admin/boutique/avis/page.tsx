@@ -54,7 +54,7 @@ export default async function AdminAvisPage({
 
       <SectionCard flush>
         {reviews.length === 0 ? (
-          <EmptyState icon={Star} title="Aucun avis" description="Aucun avis ne correspond à ce filtre." />
+          <EmptyState className="border-0 py-10" icon={Star} title="Aucun avis" description="Aucun avis ne correspond à ce filtre." />
         ) : (
           <DataTable>
             <DataTableRoot>

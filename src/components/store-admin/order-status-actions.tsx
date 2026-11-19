@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -16,13 +17,23 @@ export function OrderStatusActions({ orderId, status }: { orderId: string; statu
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [confirm, confirmDialog] = useConfirm()
 
   const options = ORDER_STATUS_TRANSITIONS[status] || []
   if (options.length === 0) return null
 
   async function setStatus(next: string) {
     const confirmMsg = CONFIRM_MESSAGES[next]
-    if (confirmMsg && !confirm(confirmMsg)) return
+    if (
+      confirmMsg &&
+      !(await confirm(confirmMsg, {
+        title: "Changer le statut de la commande",
+        confirmLabel: ORDER_STATUS_LABEL[next] || "Confirmer",
+        destructive: next === "CANCELLED",
+      }))
+    ) {
+      return
+    }
     setLoading(next)
     setError(null)
     try {
@@ -61,6 +72,7 @@ export function OrderStatusActions({ orderId, status }: { orderId: string; statu
         ))}
       </div>
       {error && <InlineMessage message={error} />}
+      {confirmDialog}
     </div>
   )
 }

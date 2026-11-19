@@ -73,7 +73,7 @@ export default async function AdminCommandesPage({
         {orders.length === 0 ? (
           <EmptyState icon={ClipboardList} title="Aucune commande" description="Aucune commande ne correspond à ce filtre." />
         ) : (
-          <DataTable>
+          <DataTable className="rounded-none border-0">
             <DataTableRoot>
               <DataTableHead>
                 <Th>Commande</Th>
@@ -93,7 +93,7 @@ export default async function AdminCommandesPage({
                       <p className="text-xs text-[var(--ak-ink-soft)]">{o.customerPhone}</p>
                     </Td>
                     <Td>{formatDateTime(o.createdAt)}</Td>
-                    <Td>{formatFcfa(o.total)}</Td>
+                    <Td className="whitespace-nowrap">{formatFcfa(o.total)}</Td>
                     <Td>
                       <StatusBadge
                         label={PAYMENT_STATUS_LABEL[o.paymentStatus] || o.paymentStatus}

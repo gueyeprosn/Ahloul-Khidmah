@@ -188,7 +188,7 @@ export default async function AdherentDetailPage({
                   {adherent.cotisations.map((c) => (
                     <Tr key={c.id}>
                       <Td className="tabular-nums">{c.periode}</Td>
-                      <Td className="tabular-nums">
+                      <Td className="whitespace-nowrap tabular-nums">
                         {formatFcfa(c.montant)}
                       </Td>
                       <Td>{canalLabel(c.canal)}</Td>
@@ -233,7 +233,7 @@ export default async function AdherentDetailPage({
                         {formatDate(p.createdAt)}
                       </Td>
                       <Td>{p.type}</Td>
-                      <Td className="tabular-nums">
+                      <Td className="whitespace-nowrap tabular-nums">
                         {formatFcfa(p.amount)}
                       </Td>
                       <Td>

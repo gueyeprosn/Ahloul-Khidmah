@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -44,6 +45,7 @@ const emptyForm = {
 
 export function TestimonialsManager({ initial }: { initial: Row[] }) {
   const router = useRouter()
+  const [confirm, confirmDialog] = useConfirm()
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -116,7 +118,12 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
   }
 
   async function remove(id: string) {
-    if (!confirm("Supprimer ce témoignage ?")) return
+    const ok = await confirm("Supprimer ce témoignage ?", {
+      title: "Supprimer le témoignage",
+      confirmLabel: "Supprimer",
+      destructive: true,
+    })
+    if (!ok) return
     setLoading(true)
     try {
       await fetch(`/api/temoignages/${id}`, { method: "DELETE" })
@@ -253,6 +260,8 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
                     size="sm"
                     variant="outline"
                     disabled={loading || i === 0}
+                    aria-label="Monter"
+                    title="Monter"
                     onClick={() =>
                       void patch(row.id, { action: "move", dir: "up" })
                     }
@@ -263,6 +272,8 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
                     size="sm"
                     variant="outline"
                     disabled={loading || i === initial.length - 1}
+                    aria-label="Descendre"
+                    title="Descendre"
                     onClick={() =>
                       void patch(row.id, { action: "move", dir: "down" })
                     }
@@ -273,6 +284,8 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
                     size="sm"
                     variant="outline"
                     disabled={loading}
+                    aria-label={row.published ? "Dépublier" : "Publier"}
+                    title={row.published ? "Dépublier" : "Publier"}
                     onClick={() =>
                       void patch(row.id, { published: !row.published })
                     }
@@ -286,6 +299,8 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
                   <Button
                     size="sm"
                     variant="outline"
+                    aria-label="Modifier"
+                    title="Modifier"
                     onClick={() => startEdit(row)}
                   >
                     <Pencil className="size-3.5" />
@@ -294,6 +309,8 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
                     size="sm"
                     variant="ghost"
                     disabled={loading}
+                    aria-label="Supprimer"
+                    title="Supprimer"
                     onClick={() => void remove(row.id)}
                   >
                     <Trash2 className="size-3.5" />
@@ -304,6 +321,7 @@ export function TestimonialsManager({ initial }: { initial: Row[] }) {
           ))}
         </div>
       )}
+      {confirmDialog}
     </div>
   )
 }

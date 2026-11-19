@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -30,6 +31,7 @@ export function CollectionProductsManager({
   products: CollectionProductRow[]
 }) {
   const router = useRouter()
+  const [confirm, confirmDialog] = useConfirm()
   const [query, setQuery] = useState("")
   const [options, setOptions] = useState<AdminProductOption[]>([])
   const [loadingOptions, setLoadingOptions] = useState(true)
@@ -86,7 +88,12 @@ export function CollectionProductsManager({
   }
 
   async function removeProduct(productId: string) {
-    if (!confirm("Retirer ce produit de la collection ?")) return
+    const ok = await confirm("Retirer ce produit de la collection ?", {
+      title: "Retirer le produit",
+      confirmLabel: "Retirer",
+      destructive: true,
+    })
+    if (!ok) return
     setPendingId(productId)
     try {
       await fetch(
@@ -155,6 +162,7 @@ export function CollectionProductsManager({
           ))}
         </ul>
       )}
+      {confirmDialog}
     </div>
   )
 }

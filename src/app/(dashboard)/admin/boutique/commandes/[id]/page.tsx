@@ -75,9 +75,9 @@ export default async function CommandeDetailPage({ params }: Params) {
                   <Tr key={item.id}>
                     <Td>{item.productName}</Td>
                     <Td className="text-xs text-[var(--ak-ink-soft)]">{item.sku}</Td>
-                    <Td>{formatFcfa(item.unitPrice)}</Td>
+                    <Td className="whitespace-nowrap">{formatFcfa(item.unitPrice)}</Td>
                     <Td>{item.quantity}</Td>
-                    <Td>{formatFcfa(item.subtotal)}</Td>
+                    <Td className="whitespace-nowrap">{formatFcfa(item.subtotal)}</Td>
                   </Tr>
                 ))}
               </DataTableBody>

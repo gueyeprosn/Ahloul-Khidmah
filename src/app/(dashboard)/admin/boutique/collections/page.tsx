@@ -57,7 +57,7 @@ export default async function AdminCollectionsPage() {
             action={{ label: "Nouvelle collection", href: "/admin/boutique/collections/nouveau" }}
           />
         ) : (
-          <DataTable>
+          <DataTable className="rounded-none border-0">
             <DataTableRoot>
               <DataTableHead>
                 <Th>Nom</Th>

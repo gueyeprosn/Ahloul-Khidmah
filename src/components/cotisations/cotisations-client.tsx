@@ -1,5 +1,6 @@
 "use client"
 
+import { useConfirm } from "@/components/shared/confirm-dialog"
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -55,6 +56,7 @@ export function CotisationsClient({
   rows: CotisationRow[]
 }) {
   const router = useRouter()
+  const [confirm, confirmDialog] = useConfirm()
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{
     type: "error" | "success"
@@ -103,7 +105,12 @@ export function CotisationsClient({
   }
 
   async function cancelPaid(cotisationId: string, adherentId: string) {
-    if (!confirm("Annuler ce paiement pour ce mois ?")) return
+    const ok = await confirm("Annuler ce paiement pour ce mois ?", {
+      title: "Annuler le paiement",
+      confirmLabel: "Annuler le paiement",
+      destructive: true,
+    })
+    if (!ok) return
     setLoadingId(adherentId)
     setFeedback(null)
     try {
@@ -326,7 +333,7 @@ export function CotisationsClient({
                       ? "—"
                       : row.celluleLocale}
                   </Td>
-                  <Td className="tabular-nums">{formatFcfa(row.expected)}</Td>
+                  <Td className="whitespace-nowrap tabular-nums">{formatFcfa(row.expected)}</Td>
                   <Td className="hidden text-muted-foreground md:table-cell">
                     {canalLabel(row.paidCanal || row.canal)}
                   </Td>
@@ -425,6 +432,7 @@ export function CotisationsClient({
           </div>
         </div>
       ) : null}
+      {confirmDialog}
     </div>
   )
 }

@@ -84,6 +84,7 @@ export function AppHeader({ breadcrumbs = [], title }: AppHeaderProps) {
               name="q"
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              aria-label="Rechercher un adhérent"
               placeholder="Rechercher un adhérent…"
               className="h-8 border-[#DED2AE] bg-white pl-8 text-sm"
             />
@@ -112,6 +113,7 @@ export function AppHeader({ breadcrumbs = [], title }: AppHeaderProps) {
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              aria-label="Rechercher un adhérent"
               placeholder="Rechercher un adhérent…"
               className="h-9 border-[#DED2AE] bg-white pl-8"
             />

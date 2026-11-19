@@ -59,7 +59,7 @@ export default async function AdminProduitsPage() {
             action={{ label: "Nouveau produit", href: "/admin/boutique/produits/nouveau" }}
           />
         ) : (
-          <DataTable>
+          <DataTable className="rounded-none border-0">
             <DataTableRoot>
               <DataTableHead>
                 <Th>Produit</Th>
@@ -85,7 +85,7 @@ export default async function AdminProduitsPage() {
                         <p className="text-xs text-[var(--ak-ink-soft)]">{p.sku}</p>
                       </Td>
                       <Td>{p.category?.name || "—"}</Td>
-                      <Td>{formatFcfa(p.price)}</Td>
+                      <Td className="whitespace-nowrap">{formatFcfa(p.price)}</Td>
                       <Td>
                         {totalAvailable}
                         {availability === "out_of_stock" && (
