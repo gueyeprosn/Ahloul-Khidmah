@@ -10,7 +10,9 @@ import {
 } from "@/lib/paydunya"
 
 export async function createContributionCheckout(
-  values: ContributionFormValues
+  values: ContributionFormValues,
+  /** Membre connecté : le paiement lui est rattaché (historique, notifications). */
+  opts: { adherentId?: string } = {}
 ) {
   if (!paydunyaConfigured()) {
     throw new Error(
@@ -51,6 +53,7 @@ export async function createContributionCheckout(
       type: "don",
       amount,
       status: "pending",
+      adherentId: opts.adherentId ?? null,
       customerName: displayName,
       customerPhone: tel,
     },

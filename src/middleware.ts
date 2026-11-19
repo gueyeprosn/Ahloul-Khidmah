@@ -99,6 +99,9 @@ function isPublicApi(pathname: string, method: string) {
   // session admin que ce middleware contrôle par défaut.
   if (pathname === "/api/mon-espace/pin" && method === "POST") return true
   if (pathname === "/api/mon-espace/photo" && method === "POST") return true
+  // Contribution d'un membre connecté : identité lue en base, session membre
+  // vérifiée dans la route.
+  if (pathname === "/api/mon-espace/contribution" && method === "POST") return true
   // Jeton push du navigateur (PWA) : session membre vérifiée dans la route.
   if (
     pathname === "/api/mon-espace/push" &&

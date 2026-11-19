@@ -10,6 +10,7 @@ import { MemberCardActions } from "@/components/adhesion/member-card-actions"
 import { SoftPayPanel } from "@/components/payments/softpay-panel"
 import { MemberPhotoUpload } from "@/components/mon-espace/member-photo-upload"
 import { PhotoFlow } from "@/components/mon-espace/photo-flow"
+import { MemberContributeForm } from "@/components/contribute/member-contribute-form"
 import { BadgeFullscreen } from "@/components/mon-espace/badge-fullscreen"
 import { PinSetupForm } from "@/components/mon-espace/pin-setup-form"
 import { PhoneInput } from "@/components/shared/phone-input"
@@ -852,6 +853,13 @@ export function MonEspaceClient() {
                 {payError}
               </p>
             ) : null}
+          </div>
+
+          <div className="rounded-xl border border-[var(--ak-gold)]/50 bg-white p-5">
+            <p className="mb-3 text-sm font-medium text-[var(--ak-emerald-deep)]">
+              Faire une contribution
+            </p>
+            <MemberContributeForm memberName={member.name} hideTitle />
           </div>
 
           <div className="rounded-xl border border-[var(--ak-gold)]/50 bg-white p-5">

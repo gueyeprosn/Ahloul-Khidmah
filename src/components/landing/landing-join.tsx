@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useLocale } from "@/components/landing/locale-provider"
 import { getContributeDict } from "@/i18n/contribute"
 import { ContributeForm } from "@/components/contribute/contribute-form"
+import { MemberContributeForm } from "@/components/contribute/member-contribute-form"
 import { cn } from "@/lib/utils"
 
 const AdhesionForm = dynamic(
@@ -30,6 +31,8 @@ type LandingJoinProps = {
   defaultMontant?: string
   /** Adhérent déjà connecté sur /mon-espace — inutile de lui remontrer le formulaire d'adhésion. */
   isMember?: boolean
+  /** Nom du membre connecté (message d'accueil du bloc « Contribuer »). */
+  memberName?: string | null
 }
 
 function tabFromHash(isMember: boolean): Tab {
@@ -40,7 +43,7 @@ function tabFromHash(isMember: boolean): Tab {
   return isMember ? "contribuer" : "adhesion"
 }
 
-export function LandingJoin({ defaultMontant, isMember = false }: LandingJoinProps) {
+export function LandingJoin({ defaultMontant, isMember = false, memberName = null }: LandingJoinProps) {
   const { dict, locale } = useLocale()
   const contribute = getContributeDict(locale)
   const [tab, setTab] = useState<Tab>(isMember ? "contribuer" : "adhesion")
@@ -85,6 +88,22 @@ export function LandingJoin({ defaultMontant, isMember = false }: LandingJoinPro
       })
     })
   }, [])
+
+  // Membre connecté : ni adhésion ni formulaire d'identité — seulement le
+  // choix du montant (ses informations viennent de sa fiche).
+  if (isMember) {
+    return (
+      <section
+        id="adhesion"
+        className="relative scroll-mt-20 bg-[linear-gradient(180deg,#F7F3E8_0%,var(--ak-ivory)_100%)] px-5 py-10 text-[var(--ak-ink)] md:px-8 md:py-14"
+      >
+        <div id="contribuer" className="pointer-events-none absolute" aria-hidden />
+        <div className="mx-auto max-w-md rounded-2xl border border-[#E6DCC0] bg-white p-5 shadow-[0_16px_40px_rgba(11,58,37,0.1)] md:p-6">
+          <MemberContributeForm memberName={memberName} />
+        </div>
+      </section>
+    )
+  }
 
   const isAdhesion = tab === "adhesion"
 

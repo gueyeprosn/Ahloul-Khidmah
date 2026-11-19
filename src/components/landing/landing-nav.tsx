@@ -52,7 +52,7 @@ export function LandingNav({
 
   const links = [
     { href: "/qui-sommes-nous", label: dict.nav.about },
-    { href: "#adhesion", label: dict.nav.adhesion },
+    ...(isMember ? [] : [{ href: "#adhesion", label: dict.nav.adhesion }]),
     { href: "#contribuer", label: dict.nav.contribute },
     ...(STORE_PUBLIC_ENABLED ? [{ href: "/boutique", label: dict.nav.store }] : []),
     { href: "/mediatheque", label: dict.nav.mediatheque },
