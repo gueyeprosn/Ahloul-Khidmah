@@ -72,21 +72,17 @@ const DEAD_TOKEN_CODES = new Set([
   "messaging/invalid-registration-token",
 ])
 
-export async function sendPush(input: PushInput): Promise<PushResult> {
-  const rows = await prisma.deviceToken.findMany({
-    where:
-      input.audience.kind === "member"
-        ? { adherentId: input.audience.adherentId }
-        : {},
-    select: { token: true },
-  })
-  const tokens = rows.map((r) => r.token)
+/** Envoie un même message à une liste de jetons ; retire les jetons périmés. */
+async function deliver(
+  tokens: string[],
+  message: { title: string; body: string; route?: string | null; webPath?: string | null }
+): Promise<PushResult> {
   const result: PushResult = { targeted: tokens.length, sent: 0, failed: 0, removed: 0 }
   if (tokens.length === 0) return result
 
   const messaging = getMessaging(firebaseApp())
-  const route = safeMobileRoute(input.route)
-  const webPath = safeWebPath(input.webPath)
+  const route = safeMobileRoute(message.route)
+  const webPath = safeWebPath(message.webPath)
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.ahloulkhidmah.org").replace(/\/$/, "")
   // Toutes les valeurs de `data` doivent être des chaînes.
   const data: Record<string, string> = { url: webPath }
@@ -96,7 +92,7 @@ export async function sendPush(input: PushInput): Promise<PushResult> {
     const chunk = tokens.slice(i, i + BATCH)
     const res = await messaging.sendEachForMulticast({
       tokens: chunk,
-      notification: { title: input.title, body: input.body },
+      notification: { title: message.title, body: message.body },
       data,
       android: { priority: "high", ttl: 24 * 60 * 60 * 1000 },
       apns: { payload: { aps: { sound: "default" } } },
@@ -118,4 +114,54 @@ export async function sendPush(input: PushInput): Promise<PushResult> {
     }
   }
   return result
+}
+
+export async function sendPush(input: PushInput): Promise<PushResult> {
+  const rows = await prisma.deviceToken.findMany({
+    where:
+      input.audience.kind === "member"
+        ? { adherentId: input.audience.adherentId }
+        : {},
+    select: { token: true },
+  })
+  return deliver(
+    rows.map((r) => r.token),
+    input
+  )
+}
+
+export type Localized = { fr: { title: string; body: string }; ar: { title: string; body: string } }
+
+/**
+ * Notifie les appareils d'UN membre, chacun dans la langue enregistrée
+ * (arabe si `locale = ar`, français sinon). Ne lève jamais : une notification
+ * ne doit pas faire échouer l'opération métier qui la déclenche.
+ */
+export async function notifyMember(
+  adherentId: string,
+  content: Localized,
+  opts: { route?: string | null; webPath?: string | null } = {}
+): Promise<PushResult | null> {
+  try {
+    if (!pushConfigured()) return null
+    const rows = await prisma.deviceToken.findMany({
+      where: { adherentId },
+      select: { token: true, locale: true },
+    })
+    const ar = rows.filter((r) => r.locale === "ar").map((r) => r.token)
+    const fr = rows.filter((r) => r.locale !== "ar").map((r) => r.token)
+    const [a, f] = await Promise.all([
+      deliver(ar, { ...content.ar, ...opts }),
+      deliver(fr, { ...content.fr, ...opts }),
+    ])
+    return {
+      targeted: a.targeted + f.targeted,
+      sent: a.sent + f.sent,
+      failed: a.failed + f.failed,
+      removed: a.removed + f.removed,
+    }
+  } catch (e) {
+    console.error("notifyMember", e)
+    return null
+  }
 }

@@ -1,3 +1,4 @@
+import { notifyCotisationRecorded } from "@/lib/payment-notify"
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { parseMontantFcfa } from "@/lib/adherents"
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
   // Crédite le wallet uniquement au passage à "payé" — évite un double
   // crédit si cette période était déjà marquée payée (simple correction).
   if (existing?.statut !== "paye") {
+    void notifyCotisationRecorded(adherentId, periode)
     await walletCredit({
       adherentId,
       amount: montant,

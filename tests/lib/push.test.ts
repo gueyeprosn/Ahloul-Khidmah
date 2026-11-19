@@ -11,7 +11,7 @@ vi.mock("firebase-admin/messaging", () => ({
   getMessaging: () => ({ sendEachForMulticast }),
 }))
 
-import { safeMobileRoute, safeWebPath, sendPush } from "@/lib/push"
+import { notifyMember, safeMobileRoute, safeWebPath, sendPush } from "@/lib/push"
 
 const PREFIX = "TESTPUSH-"
 
@@ -104,5 +104,61 @@ describe("sendPush", () => {
     expect(msg.data.route).toBe("/pay")
     expect(msg.data.url).toBe("/mon-espace/historique")
     expect(msg.tokens).toContain(`${PREFIX}m-1234567890`)
+  })
+})
+
+describe("notifyMember", () => {
+  beforeEach(async () => {
+    await clean()
+    sendEachForMulticast.mockReset()
+  })
+
+  it("envoie chaque appareil dans sa langue, et jamais à un autre membre", async () => {
+    const [a, b] = await prisma.adherent.findMany({ select: { id: true }, take: 2 })
+    if (!a || !b) return
+    const prev = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH = "package.json" // existe : simule « configuré »
+    try {
+      await prisma.deviceToken.createMany({
+        data: [
+          { token: `${PREFIX}fr-1234567890`, platform: "android", adherentId: a.id, locale: "fr" },
+          { token: `${PREFIX}ar-1234567890`, platform: "ios", adherentId: a.id, locale: "ar" },
+          { token: `${PREFIX}autre-1234567890`, platform: "android", adherentId: b.id, locale: "fr" },
+        ],
+      })
+      sendEachForMulticast.mockImplementation(async (m: { tokens: string[] }) => ({
+        successCount: m.tokens.length,
+        failureCount: 0,
+        responses: m.tokens.map(() => ({ success: true })),
+      }))
+      const r = await notifyMember(
+        a.id,
+        { fr: { title: "Titre FR", body: "Corps FR" }, ar: { title: "عنوان", body: "نص" } },
+        { route: "/card", webPath: "/mon-espace" }
+      )
+      expect(r?.sent).toBeGreaterThanOrEqual(2)
+      const calls = sendEachForMulticast.mock.calls.map((c) => c[0])
+      const ar = calls.find((m) => m.notification.title === "عنوان")
+      const fr = calls.find((m) => m.notification.title === "Titre FR")
+      expect(ar.tokens).toContain(`${PREFIX}ar-1234567890`)
+      expect(fr.tokens).toContain(`${PREFIX}fr-1234567890`)
+      const all = calls.flatMap((m) => m.tokens)
+      expect(all).not.toContain(`${PREFIX}autre-1234567890`)
+      expect(fr.data.route).toBe("/card")
+    } finally {
+      if (prev === undefined) delete process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+      else process.env.FIREBASE_SERVICE_ACCOUNT_PATH = prev
+    }
+  })
+
+  it("renvoie null sans lever si le service n'est pas configuré", async () => {
+    const prev = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+    delete process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+    try {
+      expect(await notifyMember("x", { fr: { title: "a", body: "b" }, ar: { title: "a", body: "b" } })).toBeNull()
+      expect(sendEachForMulticast).not.toHaveBeenCalled()
+    } finally {
+      if (prev !== undefined) process.env.FIREBASE_SERVICE_ACCOUNT_PATH = prev
+    }
   })
 })

@@ -12,6 +12,7 @@ import {
 } from "@/lib/adhesion-checkout"
 import { labelPeriode, shiftPeriode } from "@/lib/periode"
 import { walletCredit } from "@/lib/wallet"
+import { notifyPaymentCompleted } from "@/lib/payment-notify"
 
 /** Périodes couvertes par un paiement cotisation — `periodes` (multi-mois) sinon `periode` seul. */
 function paymentPeriodes(payment: {
@@ -189,6 +190,7 @@ export async function completePaymentByToken(token: string) {
       where: { id: payment.id },
       data: { adherentId },
     })
+    void notifyPaymentCompleted(payment.id)
     return { ok: true as const, status: "completed", payment: updatedWithAdherent }
   } else if (payment.adherentId) {
     const periodes = paymentPeriodes(payment)
@@ -207,6 +209,8 @@ export async function completePaymentByToken(token: string) {
     }
   }
 
+  // Notification au membre (une seule fois par paiement, jamais bloquante).
+  void notifyPaymentCompleted(payment.id)
   return { ok: true as const, status: "completed", payment: updated }
 }
 
