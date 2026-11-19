@@ -95,6 +95,8 @@ model Adherent {
   payments           Payment[]
   walletTransactions WalletTransaction[]
   orders             Order[]
+  mobileSessions     MobileSession[]
+  deviceTokens       DeviceToken[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -515,4 +517,68 @@ model ProductCollection {
   @@unique([productId, collectionId])
   @@index([collectionId])
   @@index([productId])
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// Application mobile (Ahloul Khidmah Mobile) — tables ADDITIVES uniquement.
+// Aucune colonne existante n'est modifiée ; les back-relations ci-dessus sur
+// Adherent ne créent pas de colonne SQL.
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Configuration distante versionnée. Une seule version `active` à la fois ;
+/// le retour arrière = réactiver une version précédente (historique conservé).
+model MobileConfig {
+  id        String   @id @default(cuid())
+  version   Int      @unique
+  payload   String // JSON validé par zod (src/lib/mobile/config.ts)
+  active    Boolean  @default(false)
+  note      String?
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  @@index([active])
+}
+
+/// Session mobile : refresh token stocké UNIQUEMENT sous forme de hash,
+/// rotatif (prevRefreshHash sert à détecter la réutilisation d'un ancien jeton).
+model MobileSession {
+  id              String    @id @default(cuid())
+  adherentId      String
+  adherent        Adherent  @relation(fields: [adherentId], references: [id], onDelete: Cascade)
+  refreshHash     String    @unique
+  prevRefreshHash String?
+  deviceName      String?
+  platform        String? // android | ios
+  appVersion      String?
+  lastUsedAt      DateTime  @default(now())
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([adherentId])
+  @@index([expiresAt])
+}
+
+/// Jeton push (FCM). adherentId nul tant que l'appareil n'est pas connecté.
+model DeviceToken {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  platform   String // android | ios
+  adherentId String?
+  adherent   Adherent? @relation(fields: [adherentId], references: [id], onDelete: SetNull)
+  locale     String?
+  appVersion String?
+  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+
+  @@index([adherentId])
+}
+
+/// Limiteur de débit persistant (survit aux redémarrages PM2). resetAt en
+/// millisecondes epoch.
+model RateLimitBucket {
+  key     String @id
+  count   Int
+  resetAt BigInt
 }

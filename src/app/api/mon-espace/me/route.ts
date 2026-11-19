@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { ZodError } from "zod"
-import { prisma } from "@/lib/db"
 import { getMemberSession } from "@/lib/member-auth"
 import {
+  applyMemberProfileUpdate,
   getAdherentForMemberSession,
   memberProfileUpdateSchema,
   serializeMemberPortal,
@@ -40,40 +40,13 @@ export async function PATCH(request: Request) {
 
   try {
     const data = memberProfileUpdateSchema.parse(json)
-    const existing = await prisma.adherent.findUnique({
-      where: { id: session.adherentId },
-      select: { id: true, email: true, badgeEmailSentAt: true },
-    })
-    if (!existing) {
+    const adherent = await applyMemberProfileUpdate(session.adherentId, data)
+    if (!adherent) {
       return NextResponse.json({ error: "Dossier introuvable" }, { status: 404 })
     }
-
-    const email = data.email?.trim() || null
-    await prisma.adherent.update({
-      where: { id: session.adherentId },
-      data: {
-        nom: data.nom.trim(),
-        prenoms: data.prenoms.trim(),
-        whatsapp: data.whatsapp?.trim() || null,
-        email,
-        profession: data.profession.trim(),
-        autreProfession: data.autreProfession?.trim() || null,
-        ficheComplete: true,
-      },
-    })
-
-    // Premier email renseigné → envoi badge / accès
-    if (email && !existing.email && !existing.badgeEmailSentAt) {
-      const { queueAdherentBadgeEmail } = await import(
-        "@/lib/send-member-email"
-      )
-      queueAdherentBadgeEmail(session.adherentId)
-    }
-
-    const adherent = await getAdherentForMemberSession(session.adherentId)
     return NextResponse.json({
       ok: true,
-      member: adherent ? await serializeMemberPortal(adherent) : null,
+      member: await serializeMemberPortal(adherent),
     })
   } catch (e) {
     if (e instanceof ZodError) {

@@ -101,6 +101,11 @@ function isPublicApi(pathname: string, method: string) {
   if (pathname === "/api/mon-espace/cotisation-checkout" && method === "POST") {
     return true
   }
+  // API de l'application mobile (versionnée) : authentification par jeton
+  // Bearer vérifiée DANS chaque route (src/lib/mobile/session.ts) — le cookie
+  // admin ne s'applique pas à ce préfixe. Le refus par défaut reste la règle
+  // pour tout le reste de /api.
+  if (pathname.startsWith("/api/mobile/v1/")) return true
   // Webhook Meta : appelé par Meta, jamais par un admin connecté.
   // GET = handshake de vérification, POST = vérifié par signature HMAC
   // dans la route elle-même (voir api/whatsapp/webhook/route.ts).
