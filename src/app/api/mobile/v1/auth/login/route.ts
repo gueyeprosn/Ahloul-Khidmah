@@ -22,7 +22,10 @@ const WINDOW = 15 * 60 * 1000
  * ouvrir l'application.
  */
 export async function POST(request: Request) {
-  const ipLimit = await rateLimitPersistent(`m-login-ip:${clientIp(request)}`, 30, WINDOW)
+  // Limite par IP volontairement large : derrière le CGNAT des opérateurs
+  // mobiles, de nombreux membres partagent la même IP publique. La vraie
+  // protection contre le brute-force est la limite par numéro ci-dessous.
+  const ipLimit = await rateLimitPersistent(`m-login-ip:${clientIp(request)}`, 100, WINDOW)
   if (!ipLimit.ok) return rateLimited(ipLimit.retryAfter)
 
   const json = await readJson(request)

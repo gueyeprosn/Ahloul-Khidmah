@@ -56,6 +56,9 @@ const device = { name: "Pixel test", platform: "android", appVersion: "1.0.0" }
 
 beforeEach(async () => {
   await prisma.mobileConfig.deleteMany()
+  // Le limiteur est persistant : sans remise à zéro, les compteurs d'une
+  // exécution précédente (même IP « unknown ») font échouer la suivante.
+  await prisma.rateLimitBucket.deleteMany()
 })
 afterAll(async () => {
   await prisma.mobileSession.deleteMany({ where: { adherentId: { startsWith: "AK-MOB" } } })
